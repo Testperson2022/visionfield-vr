@@ -1,0 +1,61 @@
+# VisionField VR — Docker Compose
+# Start hele stacken: docker compose up
+#
+# Services:
+#   db        — PostgreSQL 15 (GDPR: EU West anbefalet i produktion)
+#   backend   — Express REST API + WebSocket (port 3001)
+#   dashboard — React dashboard via nginx (port 5173)
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: visionfield_dev
+      POSTGRES_USER: visionfield
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-localdev123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U visionfield -d visionfield_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://visionfield:${DB_PASSWORD:-localdev123}@db:5432/visionfield_dev
+      JWT_SECRET: ${JWT_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      JWT_EXPIRES_IN: 8h
+      BCRYPT_COST: "12"
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      PORT: "3001"
+      NODE_ENV: development
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  dashboard:
+    build:
+      context: dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:

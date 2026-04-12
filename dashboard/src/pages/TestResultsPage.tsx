@@ -3,6 +3,7 @@ import { useTestSession } from "../hooks/useTestSessions";
 import VisualFieldMap from "../components/VisualFieldMap";
 import TriageBadge from "../components/TriageBadge";
 import QualityMetricsCard from "../components/QualityMetricsCard";
+import api from "../utils/api";
 
 export default function TestResultsPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -20,12 +21,28 @@ export default function TestResultsPage() {
         &larr; Tilbage til patient
       </Link>
 
-      <div className="mt-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Testresultater</h2>
-        <p className="text-gray-500">
-          {new Date(session.started_at).toLocaleDateString("da-DK")}{" "}
-          — {session.eye === "OD" ? "Højre øje" : "Venstre øje"} ({session.eye})
-        </p>
+      <div className="mt-4 mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Testresultater</h2>
+          <p className="text-gray-500">
+            {new Date(session.started_at).toLocaleDateString("da-DK")}{" "}
+            — {session.eye === "OD" ? "Højre øje" : "Venstre øje"} ({session.eye})
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            const { data } = await api.get(`/api/reports/${sessionId}/pdf`, { responseType: "blob" });
+            const url = window.URL.createObjectURL(new Blob([data]));
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `visionfield-${sessionId}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          }}
+          className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800"
+        >
+          Download PDF
+        </button>
       </div>
 
       {/* Triage + globale indices */}
