@@ -128,10 +128,15 @@ public class SimulatorController : MonoBehaviour
 
             if (_autoRespond)
             {
-                // Automatisk respons baseret på simuleret tærskel
-                bool seen = _currentStimulus.IntensityDb <= _simulatedThresholdDb;
-                // Tilføj lidt støj
-                if (Random.value < 0.05f) seen = !seen; // 5% fejlrate
+                // Simulér respons med psychometrisk funktion (Weibull)
+                // Sandsynlighed for at se stimulus stiger med intensitet over tærskel
+                float diff = _currentStimulus.IntensityDb - _simulatedThresholdDb;
+                // Weibull: P(seen) = 0.03 + 0.94 * (1 - exp(-10^(0.5*diff/10)))
+                double weibull = 1.0 - System.Math.Exp(
+                    -System.Math.Pow(10.0, (0.5 * diff) / 10.0));
+                double pSeen = 0.03 + 0.94 * weibull;
+
+                bool seen = Random.value < (float)pSeen;
 
                 if (seen)
                 {
