@@ -1,0 +1,13 @@
+# Kopiér til terraform.tfvars og udfyld med rigtige værdier
+# ALDRIG commit terraform.tfvars — den indeholder secrets
+
+project     = "visionfield"
+environment = "dev"
+location    = "westeurope"
+
+# Generér med: openssl rand -base64 32
+db_admin_password = "CHANGE-ME-strong-password-here"
+
+# Generér med: openssl rand -hex 32
+jwt_secret     = "CHANGE-ME-64-char-random-hex-string-for-jwt-signing-key-here!!"
+encryption_key = "CHANGE-ME-64-char-hex-string-for-aes256-gcm-encryption-key!!"
