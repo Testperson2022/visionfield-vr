@@ -18,13 +18,7 @@ COPY src/ src/
 COPY tsconfig.json ./
 RUN npx tsc
 
-# Installér kun production dependencies i separat folder
-RUN mkdir /app/prod_modules && cp package.json /app/prod_modules/ && cd /app/prod_modules && npm install --omit=dev
-# Kopiér Prisma generated client til prod modules
-RUN cp -r /app/node_modules/.prisma /app/prod_modules/node_modules/.prisma 2>/dev/null || true
-RUN cp -r /app/node_modules/@prisma /app/prod_modules/node_modules/@prisma 2>/dev/null || true
-
-# ─── Production image ────────────────────────────────────────────
+# ─── Production image ─────────────────────────────────────────��──
 FROM node:20-alpine AS production
 
 WORKDIR /app
@@ -32,10 +26,16 @@ WORKDIR /app
 # Sikkerhed: kør ikke som root
 RUN addgroup -S visionfield && adduser -S visionfield -G visionfield
 
-COPY --from=builder /app/prod_modules/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+# Installér kun production dependencies
+COPY package.json ./
+RUN npm install --omit=dev
+
+# Kopiér prisma schema og generér client mod prod node_modules
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/package.json ./
+RUN npx prisma generate
+
+# Kopiér kompileret kode
+COPY --from=builder /app/dist ./dist
 
 USER visionfield
 
