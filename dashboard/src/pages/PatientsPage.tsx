@@ -2,17 +2,29 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { usePatients } from "../hooks/usePatients";
 import PatientSearchBar from "../components/PatientSearchBar";
+import CreatePatientModal from "../components/CreatePatientModal";
 
 export default function PatientsPage() {
   const [page, setPage] = useState(1);
+  const [showCreate, setShowCreate] = useState(false);
   const { data, isLoading } = usePatients(page);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Patienter</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold text-gray-900">Patienter</h2>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+          >
+            Opret patient
+          </button>
+        </div>
         <PatientSearchBar />
       </div>
+
+      <CreatePatientModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
 
       {isLoading ? (
         <p className="text-gray-500">Indlæser...</p>
