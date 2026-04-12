@@ -84,38 +84,85 @@ function NumericGrid({ resultMap, title }: {
   );
 }
 
+// Alle 54 punkters koordinater til SVG grayscale
+const ALL_POINTS = [
+  {id:0,x:-27,y:3},{id:1,x:-21,y:3},{id:2,x:-15,y:3},{id:3,x:-9,y:3},{id:4,x:-3,y:3},{id:5,x:3,y:3},{id:6,x:9,y:3},{id:7,x:15,y:3},{id:8,x:21,y:3},{id:9,x:27,y:3},
+  {id:10,x:-27,y:9},{id:11,x:-21,y:9},{id:12,x:-15,y:9},{id:13,x:-9,y:9},{id:14,x:-3,y:9},{id:15,x:3,y:9},{id:16,x:9,y:9,bs:true},{id:17,x:15,y:9},{id:18,x:21,y:9},{id:19,x:27,y:9},
+  {id:20,x:-21,y:15},{id:21,x:-15,y:15},{id:22,x:-9,y:15},{id:23,x:-3,y:15},{id:24,x:3,y:15},{id:25,x:9,y:15},{id:26,x:15,y:15},{id:27,x:21,y:15},
+  {id:28,x:-21,y:21},{id:29,x:-15,y:21},{id:30,x:-9,y:21},{id:31,x:-3,y:21},
+  {id:32,x:3,y:-21},{id:33,x:9,y:-21},{id:34,x:15,y:-21},{id:35,x:21,y:-21},
+  {id:36,x:-21,y:-15},{id:37,x:-15,y:-15},{id:38,x:-9,y:-15},{id:39,x:-3,y:-15},{id:40,x:3,y:-15},{id:41,x:9,y:-15},{id:42,x:15,y:-15},{id:43,x:21,y:-15},
+  {id:44,x:-27,y:-9},{id:45,x:-21,y:-9},{id:46,x:-15,y:-9},{id:47,x:-9,y:-9},{id:48,x:-3,y:-9},{id:49,x:3,y:-9},{id:50,x:9,y:-9,bs:true},{id:51,x:15,y:-9},{id:52,x:21,y:-9},{id:53,x:27,y:-9},
+];
+
 function GrayscaleGrid({ resultMap }: {
   resultMap: Map<number, { threshold_db: number }>;
 }) {
-  const cellSize = 22;
+  // SVG-baseret interpoleret grayscale (Humphrey-stil)
+  const svgSize = 240;
+  const center = svgSize / 2;
+  const fieldRadius = center - 10;
+  const scale = fieldRadius / 32; // 32° max radius
+
   return (
     <div>
       <div className="text-xs font-bold text-gray-700 mb-1 text-center">Grayscale</div>
-      <div className="bg-black p-2 rounded inline-block">
-        <div className="flex flex-col items-center gap-0">
-          {GRID_ROWS.map((row, ri) => {
-            if (row.points.length === 0) return <div key={ri} className="h-0.5" />;
-            const minX = Math.min(...row.points.map(p => p.x));
-            const offsetCols = Math.round((minX + 27) / 6);
+      <svg width={svgSize} height={svgSize} className="block mx-auto">
+        <defs>
+          <clipPath id="fieldClip">
+            <circle cx={center} cy={center} r={fieldRadius} />
+          </clipPath>
+        </defs>
+
+        {/* Sort baggrund med cirkulær clip */}
+        <circle cx={center} cy={center} r={fieldRadius} fill="#000" />
+
+        {/* Interpolerede cirkler per testpunkt — store bløde spots */}
+        <g clipPath="url(#fieldClip)">
+          {ALL_POINTS.map((pt) => {
+            if (pt.bs) return null;
+            const r = resultMap.get(pt.id);
+            const db = r ? r.threshold_db : 0;
+            const g = dbToGray(db);
+            const cx = center + pt.x * scale;
+            const cy = center - pt.y * scale;
+            // Brug store, overlappende radial gradients for glat interpolation
+            const gradId = `grad_${pt.id}`;
             return (
-              <div key={ri} className="flex" style={{ marginLeft: offsetCols * cellSize }}>
-                {row.points.map((pt) => {
-                  const r = resultMap.get(pt.id);
-                  const db = r ? r.threshold_db : 0;
-                  const g = pt.bs ? 30 : dbToGray(db);
-                  return (
-                    <div key={pt.id} style={{
-                      width: cellSize, height: cellSize,
-                      backgroundColor: `rgb(${g},${g},${g})`,
-                      border: "0.5px solid #222",
-                    }} />
-                  );
-                })}
-              </div>
+              <g key={pt.id}>
+                <defs>
+                  <radialGradient id={gradId} cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor={`rgb(${g},${g},${g})`} stopOpacity="1" />
+                    <stop offset="70%" stopColor={`rgb(${g},${g},${g})`} stopOpacity="0.6" />
+                    <stop offset="100%" stopColor={`rgb(${g},${g},${g})`} stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+                <circle cx={cx} cy={cy} r={7 * scale} fill={`url(#${gradId})`} />
+              </g>
             );
           })}
-        </div>
-      </div>
+        </g>
+
+        {/* Kryds-akser */}
+        <line x1={center - fieldRadius} y1={center} x2={center + fieldRadius} y2={center} stroke="#555" strokeWidth={0.5} />
+        <line x1={center} y1={center - fieldRadius} x2={center} y2={center + fieldRadius} stroke="#555" strokeWidth={0.5} />
+
+        {/* Cirkel-border */}
+        <circle cx={center} cy={center} r={fieldRadius} fill="none" stroke="#666" strokeWidth={1} />
+
+        {/* Blind spot indikator */}
+        {ALL_POINTS.filter(p => p.bs).map(pt => (
+          <circle key={pt.id}
+            cx={center + pt.x * scale} cy={center - pt.y * scale}
+            r={3} fill="none" stroke="#555" strokeWidth={0.5} />
+        ))}
+
+        {/* S/I/N/T labels */}
+        <text x={center} y={8} textAnchor="middle" fontSize={8} fill="#888">S</text>
+        <text x={center} y={svgSize - 3} textAnchor="middle" fontSize={8} fill="#888">I</text>
+        <text x={5} y={center + 3} textAnchor="start" fontSize={8} fill="#888">N</text>
+        <text x={svgSize - 5} y={center + 3} textAnchor="end" fontSize={8} fill="#888">T</text>
+      </svg>
     </div>
   );
 }
