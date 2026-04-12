@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  productName: VisionField VR
+  companyName: VisionField
+  defaultScreenWidth: 1920
+  defaultScreenHeight: 1080
+  androidMinSdkVersion: 29
+  androidTargetSdkVersion: 0
+  AndroidBundleVersionCode: 1
+  bundleVersion: 1.0.0
+  applicationIdentifier:
+    Android: dk.visionfield.vr
+    Standalone: dk.visionfield.vr
+  colorSpace: 1
+  stripEngineCode: 1
+  scriptingBackend:
+    Android: 1
+  il2cppCompilerConfiguration:
+    Android: 2
+  apiCompatibilityLevelPerPlatform:
+    Android: 3
+  activeInputHandler: 2
