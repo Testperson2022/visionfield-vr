@@ -48,6 +48,9 @@ namespace VisionField.UI
         private int _completedPoints;
         private Coroutine _testCoroutine;
         private System.Random _isiRng;
+        private bool _firstEyeDone;
+        private TestResults _firstEyeResults;
+        private QualityMetrics _firstEyeQuality;
 
         private void Start()
         {
@@ -68,11 +71,15 @@ namespace VisionField.UI
                 }
             }
 
-            // Start test fra instruktioner
-            if (!_testRunning && _instructionsPanel != null && _instructionsPanel.activeSelf)
+            // Start test fra instruktioner eller resultater
+            if (!_testRunning && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
             {
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+                if (_instructionsPanel != null && _instructionsPanel.activeSelf)
                     StartTest();
+                else if (_resultsPanel != null && _resultsPanel.activeSelf && !_firstEyeDone)
+                    StartSecondEye();
+                else if (_resultsPanel != null && _resultsPanel.activeSelf && _firstEyeDone)
+                    ShowFinalReport();
             }
 
             // Opdatér timer
@@ -207,6 +214,16 @@ namespace VisionField.UI
 
             string eyeName = _eye == Eye.OD ? "Højre øje (OD)" : "Venstre øje (OS)";
 
+            string nextAction;
+            if (_eye == Eye.OD && !_firstEyeDone)
+            {
+                nextAction = "\nTryk SPACE for at teste VENSTRE øje (OS)";
+            }
+            else
+            {
+                nextAction = "\nTryk SPACE for samlet rapport";
+            }
+
             if (_resultsText != null)
             {
                 _resultsText.text =
@@ -221,12 +238,63 @@ namespace VisionField.UI
                     $"  False Negative: {quality.FalseNegativeRate:P0}\n" +
                     $"  Varighed: {duration:F0} sek\n" +
                     $"  Pålidelig: {(quality.IsReliable ? "JA" : "NEJ")}\n\n" +
-                    $"Stimuli: {_stimuliCount}\n\n" +
-                    "Tryk SPACE for ny test";
+                    nextAction;
             }
 
             Debug.Log($"[Desktop Test] {eyeName}: MD={results.MeanDeviationDb:F1} dB, " +
                 $"Triage={results.TriageClassification}, Reliable={quality.IsReliable}");
+        }
+
+        private void StartSecondEye()
+        {
+            // Gem første øjes resultater
+            _firstEyeResults = _testRunner.ComputeResults();
+            _firstEyeQuality = _testRunner.ComputeQualityMetrics(
+                Time.realtimeSinceStartup - _testStartTime);
+            _firstEyeDone = true;
+
+            // Skift øje
+            _eye = Eye.OS;
+
+            // Vis instruktioner for venstre øje
+            if (_resultsPanel != null) _resultsPanel.SetActive(false);
+            if (_instructionsPanel != null) _instructionsPanel.SetActive(true);
+
+            if (_instructionsText != null)
+            {
+                _instructionsText.text =
+                    "Nu tester vi VENSTRE øje (OS)\n\n" +
+                    "1. Dæk HØJRE øje til\n" +
+                    "2. Hold blikket på den røde prik\n" +
+                    "3. Tryk SPACE når du ser lysglimt\n\n" +
+                    "Tryk SPACE for at starte";
+            }
+        }
+
+        private void ShowFinalReport()
+        {
+            var secondResults = _testRunner.ComputeResults();
+            var secondQuality = _testRunner.ComputeQualityMetrics(
+                Time.realtimeSinceStartup - _testStartTime);
+
+            if (_resultsText != null)
+            {
+                _resultsText.text =
+                    "=== SAMLET RAPPORT ===\n\n" +
+                    $"HØJRE ØJE (OD):\n" +
+                    $"  MD: {_firstEyeResults.MeanDeviationDb:F1} dB\n" +
+                    $"  PSD: {_firstEyeResults.PatternSdDb:F1} dB\n" +
+                    $"  Triage: {_firstEyeResults.TriageClassification.ToString().ToUpper()}\n" +
+                    $"  Pålidelig: {(_firstEyeQuality.IsReliable ? "JA" : "NEJ")}\n\n" +
+                    $"VENSTRE ØJE (OS):\n" +
+                    $"  MD: {secondResults.MeanDeviationDb:F1} dB\n" +
+                    $"  PSD: {secondResults.PatternSdDb:F1} dB\n" +
+                    $"  Triage: {secondResults.TriageClassification.ToString().ToUpper()}\n" +
+                    $"  Pålidelig: {(secondQuality.IsReliable ? "JA" : "NEJ")}\n\n" +
+                    "Test afsluttet. Kontakt din øjenlæge med disse resultater.";
+            }
+
+            Debug.Log("[Desktop Test] Begge øjne testet — samlet rapport vist");
         }
     }
 }
