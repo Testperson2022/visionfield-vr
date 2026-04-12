@@ -109,26 +109,21 @@ public class SimulatorController : MonoBehaviour
 
     private IEnumerator TestLoopCoroutine()
     {
-        while (_testRunning && !_testRunner.IsComplete)
+        int maxTotalStimuli = 3000; // Safety limit
+        while (_testRunning && !_testRunner.IsComplete && _stimuliPresented < maxTotalStimuli)
         {
             // Hent næste stimulus
             _currentStimulus = _testRunner.GetNextStimulus();
             if (_currentStimulus == null) break;
 
-            // Inter-stimulus interval (forkortet i simulator)
-            float isi = Random.Range(0.2f, 0.5f) * _testSpeed;
-            yield return new WaitForSeconds(isi);
-
-            if (!_testRunning) { yield return new WaitUntil(() => _testRunning); }
-
             _stimuliPresented++;
 
-            // Vis stimulus (flash)
+            // Vis stimulus info
             ShowStimulus(_currentStimulus);
             _stimulusOnsetTime = Time.realtimeSinceStartup;
 
-            // Vent 200ms (stimulus on-screen tid)
-            yield return new WaitForSeconds(0.2f);
+            // Kort pause mellem stimuli (hurtigere end realtid)
+            yield return null; // Ét frame
             HideStimulus();
 
             if (_autoRespond)
@@ -244,32 +239,22 @@ public class SimulatorController : MonoBehaviour
 
     private void ShowStimulus(StimulusRequest request)
     {
-        // Vis stimulus via StimulusRenderer hvis tilgængelig
-        if (_stimulusRenderer != null)
+        // I simulator: skip StimulusRenderer (undgår timing-konflikter)
+        // Log hver 50. stimulus for at undgå Console-spam
+        if (_stimuliPresented % 50 == 1)
         {
-            _stimulusRenderer.PresentStimulus(request);
-        }
-
-        // Log til Console
-        string catchInfo = request.CatchTrialType != CatchTrialType.None
-            ? $" [CATCH:{request.CatchTrialType}]"
-            : "";
-        // Kun log hver 20. for at undgå spam
-        if (_stimuliPresented % 20 == 1)
-        {
+            string catchInfo = request.CatchTrialType != CatchTrialType.None
+                ? $" [CATCH:{request.CatchTrialType}]"
+                : "";
             Debug.Log($"  Stimulus #{_stimuliPresented}: " +
                 $"punkt={request.GridPointId}, " +
-                $"dB={request.IntensityDb:F1}, " +
-                $"pos=({request.XDeg:F0}°, {request.YDeg:F0}°)" +
+                $"dB={request.IntensityDb:F1}" +
                 catchInfo);
         }
     }
 
     private void HideStimulus()
     {
-        if (_stimulusRenderer != null)
-        {
-            _stimulusRenderer.CancelStimulus();
-        }
+        // Ingen visuel stimulus i simulator-mode
     }
 }
