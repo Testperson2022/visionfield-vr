@@ -23,6 +23,9 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
+# OpenSSL til Prisma query engine
+RUN apk add --no-cache openssl
+
 # Sikkerhed: kør ikke som root
 RUN addgroup -S visionfield && adduser -S visionfield -G visionfield
 
