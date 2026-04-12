@@ -1,0 +1,129 @@
+{
+  "app": {
+    "title": "VisionField VR",
+    "subtitle": "Clinician Dashboard"
+  },
+  "nav": {
+    "patients": "Patients",
+    "devices": "Devices",
+    "auditLog": "Audit Log",
+    "logout": "Log out"
+  },
+  "auth": {
+    "login": "Log in",
+    "loggingIn": "Logging in...",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "invalidCredentials": "Invalid credentials",
+    "sendResetLink": "Send reset link",
+    "resetSent": "If the email exists, a reset link has been sent.",
+    "resetError": "Could not send reset link. Please try again.",
+    "backToLogin": "Back to login"
+  },
+  "patients": {
+    "title": "Patients",
+    "create": "Create patient",
+    "search": "Search",
+    "searching": "Searching...",
+    "cprPlaceholder": "CPR number (10 digits)",
+    "notFound": "No patient found",
+    "name": "Name",
+    "birthYear": "Birth year",
+    "created": "Created",
+    "viewTests": "View tests",
+    "loading": "Loading...",
+    "noTests": "No tests yet",
+    "testHistory": "Test history"
+  },
+  "createPatient": {
+    "title": "Create patient",
+    "cpr": "CPR number",
+    "cprPlaceholder": "DDMMYYXXXX",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "birthYear": "Birth year",
+    "cancel": "Cancel",
+    "create": "Create",
+    "creating": "Creating...",
+    "error": "Could not create patient"
+  },
+  "testResults": {
+    "title": "Test results",
+    "backToPatient": "Back to patient",
+    "downloadPdf": "Download PDF",
+    "triage": "Triage",
+    "globalIndices": "Global indices",
+    "md": "Mean Deviation (MD)",
+    "psd": "Pattern SD (PSD)",
+    "ght": "GHT",
+    "rightEye": "Right eye",
+    "leftEye": "Left eye",
+    "loading": "Loading results...",
+    "notFound": "Session not found",
+    "noResults": "No results available",
+    "viewResults": "View results"
+  },
+  "triage": {
+    "normal": "Normal",
+    "borderline": "Borderline",
+    "abnormal": "Abnormal"
+  },
+  "quality": {
+    "title": "Quality control",
+    "reliable": "Reliable",
+    "unreliable": "Unreliable",
+    "falsePositives": "False positives",
+    "falseNegatives": "False negatives",
+    "fixationLoss": "Fixation loss",
+    "duration": "Duration"
+  },
+  "visualField": {
+    "title": "Visual field",
+    "threshold": "Threshold",
+    "deviation": "Deviation",
+    "blindSpot": "Blind spot",
+    "point": "Point",
+    "degreesLabel": "Degrees"
+  },
+  "devices": {
+    "title": "Devices",
+    "register": "Register device",
+    "cancel": "Cancel",
+    "model": "Model",
+    "serial": "Serial number",
+    "firmware": "Firmware",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "registering": "Registering...",
+    "loading": "Loading devices...",
+    "empty": "No devices registered"
+  },
+  "auditLog": {
+    "title": "Audit Log (GDPR Art. 30)",
+    "time": "Time",
+    "user": "User",
+    "action": "Action",
+    "resource": "Resource",
+    "ip": "IP",
+    "empty": "No audit logs",
+    "loading": "Loading..."
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Try reloading the page.",
+    "reload": "Reload",
+    "offline": "No internet connection — data cannot be synced"
+  },
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "page": "Page",
+    "of": "of",
+    "date": "Date",
+    "eye": "Eye",
+    "status": "Status"
+  }
+}

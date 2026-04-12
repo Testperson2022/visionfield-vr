@@ -1,0 +1,129 @@
+{
+  "app": {
+    "title": "VisionField VR",
+    "subtitle": "Kliniker Dashboard"
+  },
+  "nav": {
+    "patients": "Patienter",
+    "devices": "Enheder",
+    "auditLog": "Audit Log",
+    "logout": "Log ud"
+  },
+  "auth": {
+    "login": "Log ind",
+    "loggingIn": "Logger ind...",
+    "email": "Email",
+    "password": "Adgangskode",
+    "forgotPassword": "Glemt adgangskode?",
+    "invalidCredentials": "Ugyldige loginoplysninger",
+    "sendResetLink": "Send reset-link",
+    "resetSent": "Hvis emailen findes, er et reset-link sendt.",
+    "resetError": "Kunne ikke sende reset-link. Prøv igen.",
+    "backToLogin": "Tilbage til login"
+  },
+  "patients": {
+    "title": "Patienter",
+    "create": "Opret patient",
+    "search": "Søg",
+    "searching": "Søger...",
+    "cprPlaceholder": "CPR-nummer (10 cifre)",
+    "notFound": "Ingen patient fundet",
+    "name": "Navn",
+    "birthYear": "Fødselsår",
+    "created": "Oprettet",
+    "viewTests": "Se tests",
+    "loading": "Indlæser...",
+    "noTests": "Ingen tests endnu",
+    "testHistory": "Testhistorik"
+  },
+  "createPatient": {
+    "title": "Opret patient",
+    "cpr": "CPR-nummer",
+    "cprPlaceholder": "DDMMÅÅXXXX",
+    "firstName": "Fornavn",
+    "lastName": "Efternavn",
+    "birthYear": "Fødselsår",
+    "cancel": "Annuller",
+    "create": "Opret",
+    "creating": "Opretter...",
+    "error": "Kunne ikke oprette patient"
+  },
+  "testResults": {
+    "title": "Testresultater",
+    "backToPatient": "Tilbage til patient",
+    "downloadPdf": "Download PDF",
+    "triage": "Triage",
+    "globalIndices": "Globale indices",
+    "md": "Mean Deviation (MD)",
+    "psd": "Pattern SD (PSD)",
+    "ght": "GHT",
+    "rightEye": "Højre øje",
+    "leftEye": "Venstre øje",
+    "loading": "Indlæser resultater...",
+    "notFound": "Session ikke fundet",
+    "noResults": "Ingen resultater tilgængelige",
+    "viewResults": "Se resultater"
+  },
+  "triage": {
+    "normal": "Normal",
+    "borderline": "Grænseværdi",
+    "abnormal": "Unormal"
+  },
+  "quality": {
+    "title": "Kvalitetskontrol",
+    "reliable": "Pålidelig",
+    "unreliable": "Upålidelig",
+    "falsePositives": "False positives",
+    "falseNegatives": "False negatives",
+    "fixationLoss": "Fixation loss",
+    "duration": "Varighed"
+  },
+  "visualField": {
+    "title": "Synsfelt",
+    "threshold": "Tærskel",
+    "deviation": "Afvigelse",
+    "blindSpot": "Blind spot",
+    "point": "Punkt",
+    "degreesLabel": "Grader"
+  },
+  "devices": {
+    "title": "Enheder",
+    "register": "Registrer enhed",
+    "cancel": "Annuller",
+    "model": "Model",
+    "serial": "Serienummer",
+    "firmware": "Firmware",
+    "status": "Status",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "registering": "Registrerer...",
+    "loading": "Indlæser enheder...",
+    "empty": "Ingen enheder registreret"
+  },
+  "auditLog": {
+    "title": "Audit Log (GDPR Art. 30)",
+    "time": "Tidspunkt",
+    "user": "Bruger",
+    "action": "Handling",
+    "resource": "Ressource",
+    "ip": "IP",
+    "empty": "Ingen audit logs",
+    "loading": "Indlæser..."
+  },
+  "errors": {
+    "title": "Noget gik galt",
+    "description": "En uventet fejl opstod. Prøv at genindlæse siden.",
+    "reload": "Genindlæs",
+    "offline": "Ingen internetforbindelse — data kan ikke synkroniseres"
+  },
+  "common": {
+    "back": "Tilbage",
+    "next": "Næste",
+    "previous": "Forrige",
+    "page": "Side",
+    "of": "af",
+    "date": "Dato",
+    "eye": "Øje",
+    "status": "Status"
+  }
+}

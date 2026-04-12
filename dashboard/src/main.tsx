@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineNotice from "./components/OfflineNotice";
+import "./i18n";
 import "./styles/globals.css";
 
 const queryClient = new QueryClient({
