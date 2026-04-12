@@ -116,6 +116,7 @@ namespace VisionField.Tests
             // Tærskel bør være høj (tæt på max dB) — patient kan ikke se noget
             Assert.Greater(zest.EstimatedThresholdDb, 30.0,
                 $"Skotom-tærskel ({zest.EstimatedThresholdDb:F1} dB) burde være høj");
+        }
 
         // ─── Max stimuli grænse ──────────────────────────────────────────
 
