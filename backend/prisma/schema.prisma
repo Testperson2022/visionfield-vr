@@ -61,6 +61,7 @@ enum UserRole {
 model Patient {
   id                    String   @id @default(uuid())
   clinic_id             String
+  patient_number        String?  // Klinik-internt patient-nummer
   cpr_hash              String   // bcrypt-hashet CPR (cost 12)
   first_name_encrypted  String   // AES-256-GCM
   last_name_encrypted   String   // AES-256-GCM

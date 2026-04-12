@@ -10,6 +10,7 @@ import AuditLogPage from "./pages/AuditLogPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OperatorMonitorPage from "./pages/OperatorMonitorPage";
 import DashboardPage from "./pages/DashboardPage";
+import SettingsPage from "./pages/SettingsPage";
 
 export default function App() {
   const token = useAuthStore((s) => s.token);
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/test-results/:sessionId" element={<TestResultsPage />} />
         <Route path="/devices" element={<DevicesPage />} />
         <Route path="/monitor" element={<OperatorMonitorPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         {user?.role === "ADMIN" && (
           <Route path="/audit-logs" element={<AuditLogPage />} />
         )}

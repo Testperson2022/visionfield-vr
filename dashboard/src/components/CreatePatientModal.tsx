@@ -7,6 +7,7 @@ interface Props {
 }
 
 export default function CreatePatientModal({ isOpen, onClose }: Props) {
+  const [patientNumber, setPatientNumber] = useState("");
   const [cpr, setCpr] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -18,10 +19,10 @@ export default function CreatePatientModal({ isOpen, onClose }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createPatient.mutate(
-      { cpr, firstName, lastName, birthYear: parseInt(birthYear) },
+      { patientNumber: patientNumber || undefined, cpr, firstName, lastName, birthYear: parseInt(birthYear) },
       {
         onSuccess: () => {
-          setCpr(""); setFirstName(""); setLastName(""); setBirthYear("");
+          setPatientNumber(""); setCpr(""); setFirstName(""); setLastName(""); setBirthYear("");
           onClose();
         },
       }
@@ -34,6 +35,16 @@ export default function CreatePatientModal({ isOpen, onClose }: Props) {
         <h2 className="text-lg font-bold text-gray-900 mb-4">Opret patient</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Patient-nummer (valgfrit)</label>
+            <input
+              type="text"
+              value={patientNumber}
+              onChange={(e) => setPatientNumber(e.target.value)}
+              placeholder="Klinik-internt nummer"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">CPR-nummer</label>
             <input

@@ -26,6 +26,7 @@ export function useCreatePatient() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (patient: {
+      patientNumber?: string;
       cpr: string;
       firstName: string;
       lastName: string;
