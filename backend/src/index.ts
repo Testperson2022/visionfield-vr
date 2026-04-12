@@ -11,6 +11,7 @@ import http from "http";
 
 import { errorHandler } from "./middleware/errorHandler";
 import { auditLog } from "./middleware/audit";
+import { loginLimiter, apiLimiter } from "./middleware/rateLimiter";
 
 import authRoutes from "./routes/auth";
 import patientRoutes from "./routes/patients";
@@ -26,13 +27,29 @@ const app = express();
 const PORT = parseInt(process.env.PORT || "3001", 10);
 
 // ─── Middleware ──────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "ws:", "wss:"],
+    },
+  },
+  hsts: { maxAge: 31536000, includeSubDomains: true }, // 1 år HSTS
+}));
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(",") || "http://localhost:5173",
   credentials: true,
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express.json({ limit: "10mb" })); // Stor nok til gamma-tabeller
 app.use(auditLog);
+
+// ─── Rate Limiting ──────────────────────────────────────────────────
+app.use("/api/", apiLimiter);
 
 // ─── Health check ───────────────────────────────────────────────────
 app.get("/health", (_req, res) => {
@@ -40,7 +57,7 @@ app.get("/health", (_req, res) => {
 });
 
 // ─── API Routes ─────────────────────────────────────────────────────
-app.use("/auth", authRoutes);
+app.use("/auth", loginLimiter, authRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/test-sessions", testSessionRoutes);
 app.use("/api/calibrations", calibrationRoutes);
