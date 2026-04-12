@@ -22,7 +22,9 @@
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
       "Bash(git config:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)"
     ]
   }
 }
