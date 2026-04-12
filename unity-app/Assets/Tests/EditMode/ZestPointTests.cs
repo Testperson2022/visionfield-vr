@@ -67,7 +67,7 @@ namespace VisionField.Tests
             for (int i = 0; i < maxIterations && !zest.IsConverged; i++)
             {
                 double stimulus = zest.GetNextStimulusDb();
-                bool seen = stimulus <= trueThreshold;
+                bool seen = stimulus >= trueThreshold;
                 zest.UpdateWithResponse(stimulus, seen);
             }
 
@@ -87,7 +87,7 @@ namespace VisionField.Tests
             while (!zest.IsConverged)
             {
                 double stimulus = zest.GetNextStimulusDb();
-                bool seen = stimulus <= trueThreshold;
+                bool seen = stimulus >= trueThreshold;
                 zest.UpdateWithResponse(stimulus, seen);
                 stimuliUsed++;
             }
@@ -150,7 +150,7 @@ namespace VisionField.Tests
             for (int i = 0; i < 50 && !zest.IsConverged; i++)
             {
                 double stimulus = zest.GetNextStimulusDb();
-                zest.UpdateWithResponse(stimulus, stimulus <= 30.5);
+                zest.UpdateWithResponse(stimulus, stimulus >= 30.5);
             }
 
             Assert.IsTrue(zest.IsConverged);
@@ -207,24 +207,24 @@ namespace VisionField.Tests
             var zest = new ZestPoint(_normalPoint);
             double initialEstimate = zest.EstimatedThresholdDb;
 
-            // Patienten ser stimulus ved tærskelværdi → tærskel er sandsynligvis lavere
+            // Patienten ser stimulus ved tærskelværdi → tærskel er sandsynligvis højere
             zest.UpdateWithResponse(initialEstimate, true);
 
-            Assert.Less(zest.EstimatedThresholdDb, initialEstimate,
-                "Set stimulus ved tærskel → estimat bør falde (lavere dB = bedre syn)");
+            Assert.Greater(zest.EstimatedThresholdDb, initialEstimate,
+                "Set stimulus ved tærskel → estimat bør stige (patient kan se ved denne intensitet)");
         }
 
         [Test]
-        public void UpdateWithResponse_NotSeen_ShiftsEstimateUp()
+        public void UpdateWithResponse_NotSeen_ShiftsEstimateDown()
         {
             var zest = new ZestPoint(_normalPoint);
             double initialEstimate = zest.EstimatedThresholdDb;
 
-            // Patienten ser IKKE stimulus ved tærskelværdi → tærskel er sandsynligvis højere
+            // Patienten ser IKKE stimulus ved tærskelværdi → tærskel er sandsynligvis lavere
             zest.UpdateWithResponse(initialEstimate, false);
 
-            Assert.Greater(zest.EstimatedThresholdDb, initialEstimate,
-                "Ikke-set stimulus ved tærskel → estimat bør stige (højere dB = dårligere syn)");
+            Assert.Less(zest.EstimatedThresholdDb, initialEstimate,
+                "Ikke-set stimulus ved tærskel → estimat bør falde (patient kan ikke se ved denne intensitet)");
         }
 
         // ─── Config-varianter ────────────────────────────────────────────

@@ -38,7 +38,7 @@ namespace VisionField.Tests
                 if (request == null) break;
 
                 // Simulér normal syn: ser alt under 30 dB
-                bool seen = request.IntensityDb <= 30f;
+                bool seen = request.IntensityDb >= 25f;
                 runner.RecordResponse(
                     request.GridPointId, seen, request.IntensityDb,
                     fixationOk: true, catchTrialType: request.CatchTrialType);
@@ -67,7 +67,7 @@ namespace VisionField.Tests
                     catchTrialCount++;
 
                 runner.RecordResponse(
-                    request.GridPointId, request.IntensityDb <= 30f,
+                    request.GridPointId, request.IntensityDb >= 25f,
                     request.IntensityDb, fixationOk: true,
                     catchTrialType: request.CatchTrialType);
                 totalStimuli++;
@@ -97,7 +97,7 @@ namespace VisionField.Tests
                 }
 
                 runner.RecordResponse(
-                    request.GridPointId, request.IntensityDb <= 30f,
+                    request.GridPointId, request.IntensityDb >= 25f,
                     request.IntensityDb, fixationOk: true,
                     catchTrialType: request.CatchTrialType);
             }
@@ -169,7 +169,7 @@ namespace VisionField.Tests
                 var request = runner.GetNextStimulus();
                 if (request == null) break;
                 runner.RecordResponse(
-                    request.GridPointId, request.IntensityDb <= 30f,
+                    request.GridPointId, request.IntensityDb >= 25f,
                     request.IntensityDb, fixationOk: true,
                     catchTrialType: request.CatchTrialType);
             }
@@ -190,7 +190,7 @@ namespace VisionField.Tests
                 var request = runner.GetNextStimulus();
                 if (request == null) break;
                 runner.RecordResponse(
-                    request.GridPointId, request.IntensityDb <= 30f,
+                    request.GridPointId, request.IntensityDb >= 25f,
                     request.IntensityDb, fixationOk: false, // Dårlig fiksation
                     catchTrialType: request.CatchTrialType);
             }
@@ -213,7 +213,7 @@ namespace VisionField.Tests
                 if (request == null) break;
 
                 // Simulér perfekt normal syn: ser alt ved normativ tærskel
-                bool seen = request.IntensityDb <= 30f;
+                bool seen = request.IntensityDb >= 25f;
                 runner.RecordResponse(
                     request.GridPointId, seen, request.IntensityDb,
                     fixationOk: true, catchTrialType: request.CatchTrialType);
