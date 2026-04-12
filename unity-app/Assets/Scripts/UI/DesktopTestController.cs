@@ -111,8 +111,15 @@ namespace VisionField.UI
             if (_testPanel != null) _testPanel.SetActive(true);
             if (_resultsPanel != null) _resultsPanel.SetActive(false);
 
-            _testRunner = new ZestTestRunner(_eye, catchTrialFrequencyPer10: 1,
-                seed: DateTime.Now.Millisecond);
+            // Screening-mode: max 30 stimuli per punkt (hurtigere end fuld test)
+            var screeningConfig = new ZestConfig(
+                dbMin: ClinicalConstants.DB_MIN,
+                dbMax: ClinicalConstants.DB_MAX,
+                dbStep: ClinicalConstants.ZEST_DB_STEP,
+                stopSdDb: ClinicalConstants.ZEST_STOP_SD_DB,
+                maxStimuli: 30);
+            _testRunner = new ZestTestRunner(_eye, screeningConfig,
+                catchTrialFrequencyPer10: 1, seed: DateTime.Now.Millisecond);
             _testRunning = true;
             _stimuliCount = 0;
             _completedPoints = 0;
@@ -180,7 +187,7 @@ namespace VisionField.UI
         private void UpdateProgress()
         {
             if (_progressText != null)
-                _progressText.text = $"Punkt: {_completedPoints} / 52";
+                _progressText.text = $"Stimulus: {_stimuliCount} | Punkt: {_completedPoints} / 52";
         }
 
         private void ShowResults()

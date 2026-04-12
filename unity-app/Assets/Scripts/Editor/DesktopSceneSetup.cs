@@ -54,7 +54,7 @@ public class DesktopSceneSetup
         fixImage.color = Color.red;
         var fixRect = fixGO.GetComponent<RectTransform>();
         fixRect.anchoredPosition = Vector2.zero;
-        fixRect.sizeDelta = new Vector2(8, 8);
+        fixRect.sizeDelta = new Vector2(12, 12);
 
         // ─── Stimulus (hvid cirkel, starter skjult) ──────────────
         var stimGO = new GameObject("Stimulus");
