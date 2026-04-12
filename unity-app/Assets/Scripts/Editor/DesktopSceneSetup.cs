@@ -95,8 +95,9 @@ public class DesktopSceneSetup
         var resultsText = CreateText(resultsPanel.transform, "Results Text",
             "Resultater vises her", 20);
 
-        // ─── Desktop Test Controller ─────────────────────────────
+        // ─── Desktop Test Controller (starter skjult — test menu vælger) ─
         var controllerGO = new GameObject("Desktop Controller");
+        controllerGO.SetActive(false);
         var dtc = controllerGO.AddComponent<DesktopTestController>();
         SetField(dtc, "_stimulusRenderer", dsr);
         SetField(dtc, "_instructionsPanel", instrPanel);
@@ -106,6 +107,27 @@ public class DesktopSceneSetup
         SetField(dtc, "_timerText", timerText.GetComponent<Text>());
         SetField(dtc, "_resultsPanel", resultsPanel);
         SetField(dtc, "_resultsText", resultsText.GetComponent<Text>());
+
+        // ─── Test Selection Menu (hovedmenu ved start) ───────────
+        var menuPanel = CreatePanel(canvasGO.transform, "Test Menu");
+        var menuText = CreateText(menuPanel.transform, "Menu Text", "Indlæser...", 16);
+
+        // Simple Test Runner (for ikke-perimetri tests)
+        var simpleRunnerGO = new GameObject("Simple Test Runner");
+        var str = simpleRunnerGO.AddComponent<SimpleTestRunner>();
+        SetField(str, "_testPanel", testPanel);
+        SetField(str, "_instructionText", instrText.GetComponent<Text>());
+        SetField(str, "_stimulusText", progressText.GetComponent<Text>()); // Genbruger til stimulus
+        SetField(str, "_resultText", resultsText.GetComponent<Text>());
+        SetField(str, "_resultPanel", resultsPanel);
+
+        // Test Selection Menu
+        var menuGO = new GameObject("Test Menu Controller");
+        var tsm = menuGO.AddComponent<TestSelectionMenu>();
+        SetField(tsm, "_menuRoot", menuPanel);
+        SetField(tsm, "_titleText", menuText.GetComponent<Text>());
+        SetField(tsm, "_perimetryController", dtc);
+        SetField(tsm, "_simpleTestRunner", str);
 
         // ─── Gem scene ───────────────────────────────────────────
         string path = "Assets/Scenes/VisionFieldDesktop.unity";
