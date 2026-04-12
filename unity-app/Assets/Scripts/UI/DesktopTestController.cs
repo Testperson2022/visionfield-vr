@@ -37,6 +37,10 @@ namespace VisionField.UI
         [Header("Test Config")]
         [SerializeField] private Eye _eye = Eye.OD;
 
+        [Header("Optiker Panel")]
+        [SerializeField] private GameObject _operatorPanel;
+        [SerializeField] private Text _operatorText;
+
         // State
         private ZestTestRunner _testRunner;
         private StimulusRequest _currentStimulus;
@@ -51,11 +55,50 @@ namespace VisionField.UI
         private bool _firstEyeDone;
         private TestResults _firstEyeResults;
         private QualityMetrics _firstEyeQuality;
+        private bool _operatorCheckDone;
+        private int _operatorCheckStep;
+
+        private static readonly string[] OperatorChecks = new string[]
+        {
+            "OPTIKER TJEKLISTE\n\n" +
+            "[1/6] Rumbelysning\n" +
+            "Er rummet dæmpet? Ingen direkte lys på skærm.\n\n" +
+            "Tryk ENTER for at bekræfte",
+
+            "OPTIKER TJEKLISTE\n\n" +
+            "[2/6] Skærm-lysstyrke\n" +
+            "Er skærmens lysstyrke sat til MAKSIMUM?\n" +
+            "Auto-lysstyrke skal være SLUKKET.\n\n" +
+            "Tryk ENTER for at bekræfte",
+
+            "OPTIKER TJEKLISTE\n\n" +
+            "[3/6] Nattetilstand / f.lux\n" +
+            "Er nattetilstand, f.lux og HDR SLUKKET?\n\n" +
+            "Tryk ENTER for at bekræfte",
+
+            "OPTIKER TJEKLISTE\n\n" +
+            "[4/6] Skærmafstand\n" +
+            "Mål 50 cm fra patientens øjne til skærm.\n" +
+            "Brug en lineal eller målebånd.\n\n" +
+            "Tryk ENTER for at bekræfte",
+
+            "OPTIKER TJEKLISTE\n\n" +
+            "[5/6] Patientens korrektion\n" +
+            "Har patienten sine briller/linser på?\n" +
+            "(Nærkorrektion til 50 cm afstand)\n\n" +
+            "Tryk ENTER for at bekræfte",
+
+            "OPTIKER TJEKLISTE\n\n" +
+            "[6/6] Øjeafdækning\n" +
+            "Dæk patientens VENSTRE øje til.\n" +
+            "Vi starter med HØJRE øje (OD).\n\n" +
+            "Tryk ENTER for at gå videre til patient-instruktioner",
+        };
 
         private void Start()
         {
             _isiRng = new System.Random();
-            ShowInstructions();
+            ShowOperatorChecklist();
         }
 
         private void Update()
@@ -71,8 +114,25 @@ namespace VisionField.UI
                 }
             }
 
+            // Optiker tjekliste (ENTER for at gå videre)
+            if (!_operatorCheckDone && Input.GetKeyDown(KeyCode.Return))
+            {
+                _operatorCheckStep++;
+                if (_operatorCheckStep >= OperatorChecks.Length)
+                {
+                    _operatorCheckDone = true;
+                    ShowInstructions();
+                }
+                else
+                {
+                    ShowOperatorChecklist();
+                }
+                return;
+            }
+
             // Start test fra instruktioner eller resultater
-            if (!_testRunning && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
+            if (_operatorCheckDone && !_testRunning &&
+                (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)))
             {
                 if (_instructionsPanel != null && _instructionsPanel.activeSelf)
                     StartTest();
@@ -90,6 +150,17 @@ namespace VisionField.UI
                 int sec = (int)(elapsed % 60f);
                 _timerText.text = $"{min:D2}:{sec:D2}";
             }
+        }
+
+        private void ShowOperatorChecklist()
+        {
+            // Brug instruktionspanelet til optiker-tjekliste
+            if (_instructionsPanel != null) _instructionsPanel.SetActive(true);
+            if (_testPanel != null) _testPanel.SetActive(false);
+            if (_resultsPanel != null) _resultsPanel.SetActive(false);
+
+            if (_instructionsText != null)
+                _instructionsText.text = OperatorChecks[_operatorCheckStep];
         }
 
         private void ShowInstructions()
