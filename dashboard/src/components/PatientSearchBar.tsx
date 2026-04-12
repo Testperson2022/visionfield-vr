@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useSearchPatient } from "../hooks/usePatients";
 import { useNavigate } from "react-router-dom";
+import { useSettingsStore } from "../store/settingsStore";
 
 export default function PatientSearchBar() {
   const [cpr, setCpr] = useState("");
+  const [focused, setFocused] = useState(false);
+  const maskCpr = useSettingsStore((s) => s.maskCpr);
   const search = useSearchPatient();
   const navigate = useNavigate();
 
@@ -16,15 +19,22 @@ export default function PatientSearchBar() {
     });
   };
 
+  // Sløre de sidste 4 cifre når ikke fokuseret
+  const displayValue = (!focused && maskCpr && cpr.length > 6)
+    ? cpr.slice(0, 6) + "-****"
+    : cpr;
+
   return (
     <div className="flex gap-2">
       <input
         type="text"
-        value={cpr}
+        value={focused ? cpr : displayValue}
         onChange={(e) => setCpr(e.target.value.replace(/\D/g, "").slice(0, 10))}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         placeholder="CPR-nummer (10 cifre)"
-        className="border rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        maxLength={10}
+        className="border rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+        maxLength={focused ? 10 : 11}
       />
       <button
         onClick={handleSearch}

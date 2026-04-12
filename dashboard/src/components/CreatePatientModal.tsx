@@ -1,5 +1,34 @@
 import { useState } from "react";
 import { useCreatePatient } from "../hooks/usePatients";
+import { useSettingsStore } from "../store/settingsStore";
+
+/** CPR-input med sløring af de sidste 4 cifre */
+function CprInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const maskCpr = useSettingsStore((s) => s.maskCpr);
+
+  // Vis sløret: 010180-**** (kun når feltet ikke er fokuseret)
+  const [focused, setFocused] = useState(false);
+  const displayValue = (!focused && maskCpr && value.length > 6)
+    ? value.slice(0, 6) + "-****"
+    : value;
+
+  return (
+    <input
+      type="text"
+      value={focused ? value : displayValue}
+      onChange={(e) => {
+        const raw = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
+        onChange(raw);
+      }}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      placeholder="DDMMÅÅ-XXXX"
+      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+      maxLength={focused ? 10 : 11}
+      required
+    />
+  );
+}
 
 interface Props {
   isOpen: boolean;
@@ -47,15 +76,7 @@ export default function CreatePatientModal({ isOpen, onClose }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">CPR-nummer</label>
-            <input
-              type="text"
-              value={cpr}
-              onChange={(e) => setCpr(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              placeholder="DDMMÅÅXXXX"
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              maxLength={10}
-              required
-            />
+            <CprInput value={cpr} onChange={setCpr} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

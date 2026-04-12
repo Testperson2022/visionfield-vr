@@ -19,8 +19,8 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <label className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-gray-700">Sløre CPR-numre</p>
-              <p className="text-sm text-gray-500">Viser kun de sidste 4 cifre (XXXXXX-1234)</p>
+              <p className="font-medium text-gray-700">Sløre CPR-numre ved indtastning</p>
+              <p className="text-sm text-gray-500">Skjuler de sidste 4 cifre ved søgning og oprettelse (010180-****)</p>
             </div>
             <input
               type="checkbox"
