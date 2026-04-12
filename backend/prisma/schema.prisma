@@ -1,0 +1,210 @@
+// VisionField VR — Prisma Database Schema
+// PostgreSQL 15
+//
+// GDPR-note: Alle patientidentificerende felter er krypteret på applikationsniveau
+// INDEN de gemmes her. Prisma håndterer IKKE kryptering — det gøres i services/crypto.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Klinik og Brugere ────────────────────────────────────────────────────────
+
+model Clinic {
+  id         String   @id @default(uuid())
+  name       String
+  address    String
+  cvr        String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  users    User[]
+  patients Patient[]
+  devices  Device[]
+
+  @@map("clinics")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  clinic_id    String
+  email        String   @unique
+  password_hash String
+  first_name   String
+  last_name    String
+  role         UserRole @default(OPERATOR)
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  last_login   DateTime?
+
+  clinic       Clinic        @relation(fields: [clinic_id], references: [id])
+  test_sessions TestSession[]
+  audit_logs   AuditLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN       // Klinikadmin
+  CLINICIAN   // Øjenlæge / optometrist
+  OPERATOR    // Optiker / assistent
+}
+
+// ─── Patienter ────────────────────────────────────────────────────────────────
+
+model Patient {
+  id                    String   @id @default(uuid())
+  clinic_id             String
+  cpr_hash              String   // bcrypt-hashet CPR (cost 12)
+  first_name_encrypted  String   // AES-256-GCM
+  last_name_encrypted   String   // AES-256-GCM
+  birth_year            Int
+  gender                String?  // "M" | "F" | "X" — relevant for normative data
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  clinic        Clinic        @relation(fields: [clinic_id], references: [id])
+  test_sessions TestSession[]
+
+  @@index([clinic_id])
+  @@map("patients")
+}
+
+// ─── Enheder og Kalibrering ───────────────────────────────────────────────────
+
+model Device {
+  id               String   @id @default(uuid())
+  clinic_id        String
+  headset_model    String
+  headset_serial   String   @unique
+  firmware_version String
+  is_active        Boolean  @default(true)
+  registered_at    DateTime @default(now())
+
+  clinic        Clinic              @relation(fields: [clinic_id], references: [id])
+  calibrations  CalibrationSession[]
+  test_sessions TestSession[]
+
+  @@map("devices")
+}
+
+model CalibrationSession {
+  id                         String   @id @default(uuid())
+  device_id                  String
+  calibrated_at              DateTime @default(now())
+  background_luminance_cdm2  Float
+  max_stimulus_luminance_cdm2 Float
+  gamma_correction_table     Json     // Float[256]
+  warmup_duration_seconds    Int
+  is_valid                   Boolean  @default(true)
+  valid_until                DateTime
+
+  device        Device        @relation(fields: [device_id], references: [id])
+  test_sessions TestSession[]
+
+  @@index([device_id, is_valid])
+  @@map("calibration_sessions")
+}
+
+// ─── Test Sessioner ───────────────────────────────────────────────────────────
+
+model TestSession {
+  id               String        @id @default(uuid())
+  patient_id       String
+  device_id        String
+  calibration_id   String
+  operator_id      String
+  eye              Eye
+  status           TestStatus    @default(INITIALIZING)
+  protocol_name    String
+  protocol_version String
+  started_at       DateTime      @default(now())
+  completed_at     DateTime?
+  aborted_reason   String?
+
+  // Resultater (JSON — hele TestResults objektet)
+  results_json     Json?
+
+  // Kvalitetsmetrics
+  false_positive_rate Float?
+  false_negative_rate Float?
+  fixation_loss_rate  Float?
+  test_duration_seconds Int?
+  is_reliable         Boolean?
+
+  patient       Patient            @relation(fields: [patient_id], references: [id])
+  device        Device             @relation(fields: [device_id], references: [id])
+  calibration   CalibrationSession @relation(fields: [calibration_id], references: [id])
+  operator      User               @relation(fields: [operator_id], references: [id])
+  stimuli       StimulusEvent[]
+
+  @@index([patient_id])
+  @@index([operator_id])
+  @@index([started_at])
+  @@map("test_sessions")
+}
+
+enum Eye {
+  OD // Oculus Dexter — højre øje
+  OS // Oculus Sinister — venstre øje
+}
+
+enum TestStatus {
+  INITIALIZING
+  CALIBRATING
+  RUNNING
+  PAUSED
+  COMPLETED
+  ABORTED
+  INVALID
+}
+
+// ─── Stimuli Events ───────────────────────────────────────────────────────────
+// Gemmes for fuld audit trail og eventuel re-analyse
+
+model StimulusEvent {
+  id              String  @id @default(uuid())
+  session_id      String
+  grid_point_id   Int
+  presented_at_ms Int     // Ms siden teststart
+  intensity_db    Float
+  x_deg           Float
+  y_deg           Float
+  is_catch_trial  Boolean @default(false)
+  catch_trial_type String? // "false_positive" | "false_negative"
+
+  // Response
+  responded        Boolean
+  response_time_ms Int?
+  fixation_ok      Boolean
+  fixation_dev_deg Float?
+
+  session TestSession @relation(fields: [session_id], references: [id])
+
+  @@index([session_id])
+  @@map("stimulus_events")
+}
+
+// ─── Audit Log (GDPR Artikel 30) ─────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  user_id     String
+  action      String   // "VIEW_PATIENT", "CREATE_SESSION", "DOWNLOAD_REPORT", etc.
+  resource    String   // "patient:uuid" eller "session:uuid"
+  ip_address  String
+  user_agent  String
+  created_at  DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([created_at])
+  @@map("audit_logs")
+}

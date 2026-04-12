@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Builds
+dist/
+build/
+.next/
+out/
+
+# Secrets — ALDRIG commit disse
+.env.local
+.env.production
+*.pem
+*.key
+*.p12
+
+# Database
+*.db
+*.sqlite
+
+# Unity build-check (offline compilation, ikke shipped)
+unity-app/.build-check/bin/
+unity-app/.build-check/obj/
+
+# Unity
+unity-app/Library/
+unity-app/Temp/
+unity-app/Logs/
+unity-app/obj/
+unity-app/Build/
+unity-app/Builds/
+unity-app/UserSettings/
+*.pidb
+*.unityproj
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Prisma
+backend/prisma/migrations/dev.db
+
+# Calibration data (store i Azure Blob, ikke git)
+calibration/data/

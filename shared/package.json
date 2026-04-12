@@ -1,0 +1,17 @@
+{
+  "name": "@visionfield/shared",
+  "version": "1.0.0",
+  "description": "Delte typer og algoritmer for VisionField VR",
+  "main": "dist/types/index.js",
+  "types": "dist/types/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "exports": {
+    "./types": "./dist/types/index.js",
+    "./types/testGrid": "./dist/types/testGrid.js",
+    "./algorithms/zest": "./dist/algorithms/zest.js"
+  }
+}

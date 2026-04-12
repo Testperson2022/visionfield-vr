@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Nullable>disable</Nullable>
+    <NoWarn>CS0649;CS0169;CS0414</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Unity stubs -->
+    <Compile Include="UnityStubs.cs" />
+
+    <!-- Core models -->
+    <Compile Include="../Assets/Scripts/Core/Models/*.cs" />
+    <Compile Include="../Assets/Scripts/Core/ClinicalConstants.cs" />
+    <Compile Include="../Assets/Scripts/Core/ZestConfig.cs" />
+    <Compile Include="../Assets/Scripts/Core/ZestPoint.cs" />
+    <Compile Include="../Assets/Scripts/Core/ZestTestRunner.cs" />
+    <Compile Include="../Assets/Scripts/Core/Data/TestGrid24_2.cs" />
+
+    <!-- EyeTracking -->
+    <Compile Include="../Assets/Scripts/EyeTracking/*.cs" />
+
+    <!-- Network -->
+    <Compile Include="../Assets/Scripts/Network/*.cs" />
+
+    <!-- UI -->
+    <Compile Include="../Assets/Scripts/UI/*.cs" />
+
+    <!-- Stimuli -->
+    <Compile Include="../Assets/Scripts/Stimuli/*.cs" />
+
+    <!-- Tests -->
+    <Compile Include="../Assets/Tests/EditMode/*.cs" />
+  </ItemGroup>
+</Project>
