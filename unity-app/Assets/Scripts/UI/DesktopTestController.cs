@@ -210,9 +210,12 @@ namespace VisionField.UI
             if (_testPanel != null) _testPanel.SetActive(false);
             if (_resultsPanel != null) _resultsPanel.SetActive(true);
 
-            string triageColor =
-                results.TriageClassification == TriageClassification.Normal ? "green" :
-                results.TriageClassification == TriageClassification.Borderline ? "yellow" : "red";
+            // Gem resultater for brug i samlet rapport
+            if (_eye == Eye.OD && !_firstEyeDone)
+            {
+                _firstEyeResults = results;
+                _firstEyeQuality = quality;
+            }
 
             string eyeName = _eye == Eye.OD ? "Højre øje (OD)" : "Venstre øje (OS)";
 
@@ -249,10 +252,6 @@ namespace VisionField.UI
 
         private void StartSecondEye()
         {
-            // Gem første øjes resultater
-            _firstEyeResults = _testRunner.ComputeResults();
-            _firstEyeQuality = _testRunner.ComputeQualityMetrics(
-                Time.realtimeSinceStartup - _testStartTime);
             _firstEyeDone = true;
 
             // Skift øje
