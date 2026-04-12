@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useLogin } from "../hooks/useAuth";
 
 export default function LoginPage() {
@@ -41,6 +42,10 @@ export default function LoginPage() {
               minLength={8}
             />
           </div>
+
+          <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
+            Glemt adgangskode?
+          </Link>
 
           {login.isError && (
             <p className="text-sm text-red-600">Ugyldige loginoplysninger</p>

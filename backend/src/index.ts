@@ -12,13 +12,16 @@ import http from "http";
 import { errorHandler } from "./middleware/errorHandler";
 import { auditLog } from "./middleware/audit";
 import { loginLimiter, apiLimiter } from "./middleware/rateLimiter";
+import { enforceHttps } from "./middleware/httpsEnforce";
 
 import authRoutes from "./routes/auth";
+import passwordResetRoutes from "./routes/password-reset";
 import patientRoutes from "./routes/patients";
 import testSessionRoutes from "./routes/test-sessions";
 import calibrationRoutes from "./routes/calibrations";
 import deviceRoutes from "./routes/devices";
 import reportRoutes from "./routes/reports";
+import auditLogRoutes from "./routes/audit-logs";
 
 import { setupWebSocket } from "./websocket/handler";
 import { logger } from "./utils/logger";
@@ -27,6 +30,7 @@ const app = express();
 const PORT = parseInt(process.env.PORT || "3001", 10);
 
 // ─── Middleware ──────────────────────────────────────────────────────
+app.use(enforceHttps);
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -58,11 +62,13 @@ app.get("/health", (_req, res) => {
 
 // ─── API Routes ─────────────────────────────────────────────────────
 app.use("/auth", loginLimiter, authRoutes);
+app.use("/auth", loginLimiter, passwordResetRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/test-sessions", testSessionRoutes);
 app.use("/api/calibrations", calibrationRoutes);
 app.use("/api/devices", deviceRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
 
 // ─── Error handler (skal være SIDST) ────────────────────────────────
 app.use(errorHandler);
