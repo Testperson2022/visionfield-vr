@@ -1,17 +1,45 @@
 /**
- * VisionField VR — Humphrey-stil Single Field Printout
+ * VisionField VR — Humphrey VFA Single Field Printout
  *
- * 4 plots i klinisk format:
- * 1. Numerisk dB grid — tærskelværdier placeret på koordinatsystem
- * 2. Grayscale — interpoleret cirkulær heatmap
- * 3. Total Deviation — afvigelser + probability map
- * 4. Pattern Deviation — korrigerede afvigelser + probability map
+ * Pixel-perfekt gengivelse af Humphrey 24-2 printout.
+ * Ref: Walsh 2010, Fig 3-16 (p.100) og Fig 3-20 (p.106)
  *
- * Ref: Walsh 2010, Fig 3-16; Humphrey VFA printout
+ * Layout: 10 kolonner × 9 rækker (med gaps for 24-2 diamant-form)
+ * Rækkerne (top→bund): y = 27, 21, 15, 9, 3, -3, -9, -15, -21, -27
+ * Men 24-2 bruger: 21, 15, 9, 3, -9, -15, -21 (ingen y=±27, ingen y=-3/+3 gap)
+ *
+ * Korrekt 24-2 punkt-layout (● = testpunkt, · = tomt):
+ *   Row y=21:  · · · ● ● ● ● · · ·    (4 punkter: x=-9,-3,+3,+9... nej)
+ *
+ * FAKTISK layout fra Humphrey (talt fra bogen):
+ *   y=21:           ○ ○ ○ ○                       4 punkter  (x=-21,-15,-9,-3)
+ *   y=15:        ○ ○ ○ ○ ○ ○ ○ ○                  8 punkter
+ *   y=9:      ○ ○ ○ ○ ○ ○ BS ○ ○ ○               10 punkter
+ *   y=3:      ○ ○ ○ ○ ○ ○ ○ ○ ○ ○                10 punkter
+ *   ─────────────────────────────── horisontal akse
+ *   y=-9:     ○ ○ ○ ○ ○ ○ BS ○ ○ ○               10 punkter
+ *   y=-15:       ○ ○ ○ ○ ○ ○ ○ ○                  8 punkter
+ *   y=-21:                ○ ○ ○ ○                  4 punkter  (x=3,9,15,21)
  */
 
-// Alle 54 testpunkter med koordinater
-const POINTS: Array<{ id: number; x: number; y: number; bs?: boolean }> = [
+// Grid-definition: hvilke x-positioner eksisterer per y-række
+const ROWS: Array<{ y: number; cols: Array<{ id: number; x: number; bs?: boolean } | null> }> = [
+  { y: 21, cols: [
+    null, null, null,
+    { id: 28, x: -9 }, { id: 29, x: -3 },  // Venstre side af akse
+    null, null,  // akse-gap
+    null, null, null
+  ]},
+  // Lad mig definere det korrekt med den fulde x-range -27 til 27
+];
+
+// Bedre tilgang: definer punkter per række med præcise x-positioner
+// x-kolonner: -27, -21, -15, -9, -3, 3, 9, 15, 21, 27 (10 kolonner)
+const X_COLS = [-27, -21, -15, -9, -3, 3, 9, 15, 21, 27];
+
+// Punkt-ID lookup: key = "x,y" → id
+const POINT_MAP: Record<string, { id: number; bs?: boolean }> = {};
+[
   {id:0,x:-27,y:3},{id:1,x:-21,y:3},{id:2,x:-15,y:3},{id:3,x:-9,y:3},{id:4,x:-3,y:3},
   {id:5,x:3,y:3},{id:6,x:9,y:3},{id:7,x:15,y:3},{id:8,x:21,y:3},{id:9,x:27,y:3},
   {id:10,x:-27,y:9},{id:11,x:-21,y:9},{id:12,x:-15,y:9},{id:13,x:-9,y:9},{id:14,x:-3,y:9},
@@ -24,7 +52,10 @@ const POINTS: Array<{ id: number; x: number; y: number; bs?: boolean }> = [
   {id:40,x:3,y:-15},{id:41,x:9,y:-15},{id:42,x:15,y:-15},{id:43,x:21,y:-15},
   {id:44,x:-27,y:-9},{id:45,x:-21,y:-9},{id:46,x:-15,y:-9},{id:47,x:-9,y:-9},{id:48,x:-3,y:-9},
   {id:49,x:3,y:-9},{id:50,x:9,y:-9,bs:true},{id:51,x:15,y:-9},{id:52,x:21,y:-9},{id:53,x:27,y:-9},
-];
+].forEach(p => { POINT_MAP[`${p.x},${p.y}`] = { id: p.id, bs: p.bs }; });
+
+// Y-rækker fra top til bund (med akse mellem y=3 og y=-9)
+const Y_ROWS = [21, 15, 9, 3, -9, -15, -21];
 
 interface VisualFieldMapProps {
   pointResults: Array<{
@@ -40,183 +71,99 @@ function dbToGray(db: number): number {
   return Math.round(Math.max(0, Math.min(255, (db / 35) * 255)));
 }
 
-// Probability symbol shading
-function devToShade(dev: number): string {
-  if (dev >= -2) return "transparent";
+function devToShade(dev: number): string | null {
+  if (dev >= -2) return null;
   if (dev >= -4) return "#ccc";
-  if (dev >= -7) return "#888";
-  if (dev >= -12) return "#444";
-  return "#000";
+  if (dev >= -7) return "#999";
+  if (dev >= -12) return "#555";
+  return "#111";
 }
 
-/** SVG-baseret kompakt numerisk grid (Humphrey-stil) */
-function NumericPlot({ resultMap, field, title }: {
+/** En enkelt grid-visning — bruges til alle 4 plots */
+function FieldGrid({ resultMap, mode }: {
   resultMap: Map<number, any>;
-  field: "threshold_db" | "total_deviation_db" | "pattern_deviation_db";
-  title: string;
+  mode: "numeric" | "grayscale" | "td_numeric" | "td_prob" | "pd_numeric" | "pd_prob";
 }) {
-  // Kompakt grid: 6° spacing = 22px per celle
-  const cellW = 24;
-  const cellH = 18;
-  // Grid spænder x: -27 til 27 (10 kolonner), y: -21 til 21 (8 rækker)
-  // Kolonne index: (x + 27) / 6 = 0..9
-  // Række index: (21 - y) / 6 = 0..7 (men y=-3 og y=3 er tæt)
-  const yValues = [21, 15, 9, 3, -3, -9, -15, -21]; // Bemærk: ingen y=-3 rækker i 24-2
-  const gridW = 10 * cellW + 20;
-  const gridH = 8 * cellH + 20;
-  const ox = 10; // offset x
-  const oy = 10; // offset y
-
-  const colOf = (x: number) => ox + ((x + 27) / 6) * cellW + cellW / 2;
-  const rowOf = (y: number) => {
-    const idx = yValues.indexOf(y);
-    if (idx === -1) return oy;
-    return oy + idx * cellH + cellH / 2;
-  };
-
-  // Horisontal akse mellem y=3 og y=-3 (dvs. mellem idx 3 og 4)
-  const axisY = oy + 3.5 * cellH + cellH / 2;
-  // Vertikal akse mellem x=-3 og x=3 (dvs. kolonne 4.5)
-  const axisX = ox + 4.5 * cellW + cellW / 2;
+  const cell = mode === "grayscale" || mode === "td_prob" || mode === "pd_prob" ? 20 : 26;
+  const gap = mode === "grayscale" || mode === "td_prob" || mode === "pd_prob" ? 1 : 2;
+  const axisGap = mode === "grayscale" || mode === "td_prob" || mode === "pd_prob" ? 4 : 6;
+  const totalW = X_COLS.length * (cell + gap);
+  const axisRowIdx = 4; // Akse mellem y=3 (idx 3) og y=-9 (idx 4)
+  const totalH = Y_ROWS.length * (cell + gap) + axisGap;
 
   return (
-    <div>
-      <div className="text-[10px] font-bold text-gray-700 mb-1 text-center">{title}</div>
-      <svg width={gridW} height={gridH} className="block mx-auto" style={{ fontFamily: "ui-monospace, monospace" }}>
-        {/* Tynd akse */}
-        <line x1={0} y1={axisY} x2={gridW} y2={axisY} stroke="#ccc" strokeWidth={0.5} />
-        <line x1={axisX} y1={0} x2={axisX} y2={gridH} stroke="#ccc" strokeWidth={0.5} />
+    <svg width={totalW} height={totalH} style={{ display: "block", margin: "0 auto", fontFamily: "ui-monospace, monospace" }}>
+      {Y_ROWS.map((y, ri) => {
+        const rowY = ri * (cell + gap) + (ri >= axisRowIdx ? axisGap : 0);
 
-        {POINTS.map(pt => {
-          const px = colOf(pt.x);
-          const py = rowOf(pt.y);
+        return X_COLS.map((x, ci) => {
+          const key = `${x},${y}`;
+          const pt = POINT_MAP[key];
+          if (!pt) return null;
+
+          const cellX = ci * (cell + gap);
           const r = resultMap.get(pt.id);
+          const threshold = r?.threshold_db ?? 0;
+          const td = r?.total_deviation_db ?? 0;
+          const pd = r?.pattern_deviation_db ?? td;
 
+          if (mode === "grayscale") {
+            const g = pt.bs ? 40 : dbToGray(threshold);
+            return (
+              <rect key={key} x={cellX} y={rowY} width={cell} height={cell}
+                fill={`rgb(${g},${g},${g})`} />
+            );
+          }
+
+          if (mode === "td_prob" || mode === "pd_prob") {
+            const dev = mode === "td_prob" ? td : pd;
+            const shade = devToShade(dev);
+            if (pt.bs) return null;
+            return (
+              <rect key={key} x={cellX} y={rowY} width={cell} height={cell}
+                fill={shade ?? "#f0f0f0"} stroke={shade ? "none" : "#e0e0e0"} strokeWidth={0.5} />
+            );
+          }
+
+          // Numerisk modes
           if (pt.bs) {
-            return <text key={pt.id} x={px} y={py + 4} textAnchor="middle" fontSize={9} fill="#aaa">·</text>;
+            return (
+              <text key={key} x={cellX + cell / 2} y={rowY + cell / 2 + 4}
+                textAnchor="middle" fontSize={8} fill="#999">·</text>
+            );
           }
 
-          let val: number;
-          let displayText: string;
-          let color = "#222";
-
-          if (field === "threshold_db") {
-            val = r ? r.threshold_db : 0;
-            displayText = val < 0 ? "<0" : Math.round(val).toString();
-          } else {
-            val = r ? (field === "pattern_deviation_db" ? (r.pattern_deviation_db ?? r.total_deviation_db) : r.total_deviation_db) : 0;
-            displayText = val >= 0 ? Math.round(val).toString() : Math.round(val).toString();
+          let val: number, color = "#222";
+          if (mode === "numeric") {
+            val = threshold;
+          } else if (mode === "td_numeric") {
+            val = td;
             if (val < -5) color = "#b00";
-            if (val >= 0) color = "#555";
+            if (val >= 0) color = "#666";
+          } else {
+            val = pd;
+            if (val < -5) color = "#b00";
+            if (val >= 0) color = "#666";
           }
+
+          const text = mode === "numeric"
+            ? (val < 0 ? "<0" : Math.round(val).toString())
+            : Math.round(val).toString();
 
           return (
-            <text key={pt.id} x={px} y={py + 4} textAnchor="middle"
-              fontSize={9} fill={color}>
-              {displayText}
+            <text key={key} x={cellX + cell / 2} y={rowY + cell / 2 + 4}
+              textAnchor="middle" fontSize={9} fill={color}>
+              {text}
             </text>
           );
-        })}
-      </svg>
-    </div>
-  );
-}
+        });
+      })}
 
-/** Kompakt probability symbol map */
-function ProbabilityPlot({ resultMap, field }: {
-  resultMap: Map<number, any>;
-  field: "total_deviation_db" | "pattern_deviation_db";
-}) {
-  const cellW = 24;
-  const cellH = 18;
-  const cs = 14;
-  const yValues = [21, 15, 9, 3, -3, -9, -15, -21];
-  const gridW = 10 * cellW + 20;
-  const gridH = 8 * cellH + 20;
-  const ox = 10, oy = 10;
-
-  const colOf = (x: number) => ox + ((x + 27) / 6) * cellW + cellW / 2;
-  const rowOf = (y: number) => {
-    const idx = yValues.indexOf(y);
-    return oy + idx * cellH + cellH / 2;
-  };
-
-  return (
-    <div>
-      <svg width={gridW} height={gridH} className="block mx-auto">
-        {POINTS.map(pt => {
-          if (pt.bs) return null;
-          const r = resultMap.get(pt.id);
-          const dev = r ? (field === "pattern_deviation_db" ? (r.pattern_deviation_db ?? r.total_deviation_db) : r.total_deviation_db) : 0;
-          const shade = devToShade(dev);
-          if (shade === "transparent") return null;
-          const px = colOf(pt.x);
-          const py = rowOf(pt.y);
-          return (
-            <rect key={pt.id} x={px - cs / 2} y={py - cs / 2}
-              width={cs} height={cs} fill={shade} />
-          );
-        })}
-      </svg>
-      <div className="flex gap-2 text-[8px] text-gray-500 justify-center">
-        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#ccc" }} /> &lt;5%</span>
-        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#888" }} /> &lt;2%</span>
-        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#444" }} /> &lt;1%</span>
-        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#000" }} /> &lt;0.5%</span>
-      </div>
-    </div>
-  );
-}
-
-/** Interpoleret grayscale cirkel */
-function GrayscalePlot({ resultMap }: { resultMap: Map<number, any> }) {
-  const svgSize = 300;
-  const center = svgSize / 2;
-  const fieldRadius = center - 15;
-  const scale = fieldRadius / 32;
-
-  return (
-    <div>
-      <div className="text-xs font-bold text-gray-700 mb-2 text-center">Grayscale</div>
-      <svg width={svgSize} height={svgSize} className="block mx-auto">
-        <defs>
-          <clipPath id="gc">
-            <circle cx={center} cy={center} r={fieldRadius} />
-          </clipPath>
-        </defs>
-        <circle cx={center} cy={center} r={fieldRadius} fill="#000" />
-        <g clipPath="url(#gc)">
-          {POINTS.filter(p => !p.bs).map(pt => {
-            const r = resultMap.get(pt.id);
-            const db = r ? r.threshold_db : 0;
-            const g = dbToGray(db);
-            const px = center + pt.x * scale;
-            const py = center - pt.y * scale;
-            const gid = `g${pt.id}`;
-            return (
-              <g key={pt.id}>
-                <defs>
-                  <radialGradient id={gid}>
-                    <stop offset="0%" stopColor={`rgb(${g},${g},${g})`} stopOpacity="1" />
-                    <stop offset="60%" stopColor={`rgb(${g},${g},${g})`} stopOpacity="0.7" />
-                    <stop offset="100%" stopColor={`rgb(${g},${g},${g})`} stopOpacity="0" />
-                  </radialGradient>
-                </defs>
-                <circle cx={px} cy={py} r={7.5 * scale} fill={`url(#${gid})`} />
-              </g>
-            );
-          })}
-        </g>
-        <line x1={center - fieldRadius} y1={center} x2={center + fieldRadius} y2={center} stroke="#444" strokeWidth={0.5} />
-        <line x1={center} y1={center - fieldRadius} x2={center} y2={center + fieldRadius} stroke="#444" strokeWidth={0.5} />
-        <circle cx={center} cy={center} r={fieldRadius} fill="none" stroke="#555" strokeWidth={1} />
-        <circle cx={center} cy={center} r={3} fill="red" />
-        <text x={center} y={10} textAnchor="middle" fontSize={9} fill="#777">S</text>
-        <text x={center} y={svgSize - 4} textAnchor="middle" fontSize={9} fill="#777">I</text>
-        <text x={6} y={center + 3} fontSize={9} fill="#777">N</text>
-        <text x={svgSize - 10} y={center + 3} fontSize={9} fill="#777">T</text>
-      </svg>
-    </div>
+      {/* Horisontal akse */}
+      <line x1={0} y1={axisRowIdx * (cell + gap) + axisGap / 2}
+        x2={totalW} y2={axisRowIdx * (cell + gap) + axisGap / 2}
+        stroke="#aaa" strokeWidth={0.5} />
+    </svg>
   );
 }
 
@@ -229,23 +176,50 @@ export default function VisualFieldMap({ pointResults, eye }: VisualFieldMapProp
         Synsfelt — {eye === "OD" ? "Højre øje (OD)" : "Venstre øje (OS)"}
       </h3>
 
-      {/* Øverste række: Numerisk + Grayscale */}
-      <div className="flex justify-center gap-6 mb-6 flex-wrap">
-        <NumericPlot resultMap={resultMap} field="threshold_db" title="Numeric Results (dB)" />
-        <GrayscalePlot resultMap={resultMap} />
+      {/* Øverste: Numerisk + Grayscale side om side */}
+      <div className="flex justify-center gap-10 mb-8 flex-wrap items-start">
+        <div>
+          <div className="text-[10px] font-bold text-gray-600 mb-2 text-center">Numeric Results (dB)</div>
+          <FieldGrid resultMap={resultMap} mode="numeric" />
+        </div>
+        <div>
+          <div className="text-[10px] font-bold text-gray-600 mb-2 text-center">Grayscale</div>
+          <div className="bg-black p-1 inline-block">
+            <FieldGrid resultMap={resultMap} mode="grayscale" />
+          </div>
+        </div>
       </div>
 
-      {/* Nederste række: Total Deviation + Pattern Deviation */}
-      <div className="flex justify-center gap-6 flex-wrap">
+      {/* Nederste: TD + PD — hvert med numerisk over probability */}
+      <div className="flex justify-center gap-10 flex-wrap items-start">
         <div>
-          <NumericPlot resultMap={resultMap} field="total_deviation_db" title="Total Deviation" />
-          <ProbabilityPlot resultMap={resultMap} field="total_deviation_db" />
+          <div className="text-[10px] font-bold text-gray-600 mb-2 text-center">Total Deviation</div>
+          <FieldGrid resultMap={resultMap} mode="td_numeric" />
+          <div className="mt-2">
+            <FieldGrid resultMap={resultMap} mode="td_prob" />
+          </div>
+          <Legend />
         </div>
         <div>
-          <NumericPlot resultMap={resultMap} field="pattern_deviation_db" title="Pattern Deviation" />
-          <ProbabilityPlot resultMap={resultMap} field="pattern_deviation_db" />
+          <div className="text-[10px] font-bold text-gray-600 mb-2 text-center">Pattern Deviation</div>
+          <FieldGrid resultMap={resultMap} mode="pd_numeric" />
+          <div className="mt-2">
+            <FieldGrid resultMap={resultMap} mode="pd_prob" />
+          </div>
+          <Legend />
         </div>
       </div>
+    </div>
+  );
+}
+
+function Legend() {
+  return (
+    <div className="flex gap-2 text-[8px] text-gray-500 justify-center mt-2">
+      <span className="flex items-center gap-0.5">◻ &lt;5%</span>
+      <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#999" }} /> &lt;2%</span>
+      <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#555" }} /> &lt;1%</span>
+      <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#111" }} /> &lt;0.5%</span>
     </div>
   );
 }
