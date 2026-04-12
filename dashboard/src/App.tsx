@@ -9,6 +9,7 @@ import DevicesPage from "./pages/DevicesPage";
 import AuditLogPage from "./pages/AuditLogPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OperatorMonitorPage from "./pages/OperatorMonitorPage";
+import DashboardPage from "./pages/DashboardPage";
 
 export default function App() {
   const token = useAuthStore((s) => s.token);
@@ -27,7 +28,7 @@ export default function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/patients" replace />} />
+        <Route path="/" element={<DashboardPage />} />
         <Route path="/patients" element={<PatientsPage />} />
         <Route path="/patients/:id" element={<PatientDetailPage />} />
         <Route path="/test-results/:sessionId" element={<TestResultsPage />} />

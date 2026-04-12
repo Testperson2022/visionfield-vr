@@ -9,6 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore();
 
   const navItems = [
+    { path: "/", label: "Dashboard" },
     { path: "/patients", label: t("nav.patients") },
     { path: "/monitor", label: "Live Monitor" },
     { path: "/devices", label: t("nav.devices") },
@@ -29,7 +30,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               key={item.path}
               to={item.path}
               className={`block px-4 py-2 rounded-lg text-sm ${
-                location.pathname.startsWith(item.path)
+                (item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path))
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:bg-gray-800"
               }`}
