@@ -69,3 +69,4 @@ infra/.terraform.lock.hcl
 
 # Calibration data (store i Azure Blob, ikke git)
 calibration/data/
+infra/terraform.exe
