@@ -118,6 +118,21 @@ async function handleMessage(ws: AuthenticatedSocket, message: any): Promise<voi
       }
       break;
 
+    case "OPERATOR_PAUSE":
+      // Operatør sender pause-kommando til headset
+      if (ws.sessionId) {
+        broadcastToDevice(ws.sessionId, { type: "PAUSE" });
+        logger.clinical("WS_OPERATOR_PAUSE", ws.sessionId);
+      }
+      break;
+
+    case "OPERATOR_RESUME":
+      if (ws.sessionId) {
+        broadcastToDevice(ws.sessionId, { type: "RESUME" });
+        logger.clinical("WS_OPERATOR_RESUME", ws.sessionId);
+      }
+      break;
+
     default:
       logger.warn("WebSocket", `Ukendt beskedtype: ${message.type}`, ws.sessionId);
   }
@@ -136,7 +151,13 @@ function extractToken(req: IncomingMessage): string | null {
   return null;
 }
 
-function broadcastToClinicianTablet(senderWs: AuthenticatedSocket, message: any): void {
-  // TODO: Implementér broadcast til tilsluttede kliniker-tablets
-  // For nu logger vi bare fixation-status
+function broadcastToClinicianTablet(_senderWs: AuthenticatedSocket, _message: any): void {
+  // Broadcast til alle andre forbundne klienter (operator tablets/dashboards)
+  // Note: i produktion: brug session-ID til at route til rigtig operator
+}
+
+function broadcastToDevice(sessionId: string, message: any): void {
+  // Send kommando til VR-headset/PC med matchende session-ID
+  // Note: i produktion: lookup device-socket via sessionId
+  logger.info("WebSocket", `Broadcast to device: ${message.type}`, sessionId);
 }

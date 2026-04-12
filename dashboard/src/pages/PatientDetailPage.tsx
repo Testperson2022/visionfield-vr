@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { usePatient } from "../hooks/usePatients";
 import { usePatientSessions } from "../hooks/useTestSessions";
 import TriageBadge from "../components/TriageBadge";
+import ProgressionChart from "../components/ProgressionChart";
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +21,14 @@ export default function PatientDetailPage() {
         </h2>
         <p className="text-gray-500">Fødselsår: {patient.birthYear}</p>
       </div>
+
+      {/* Progression analysis */}
+      {sessions?.items?.length >= 2 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <ProgressionChart sessions={sessions.items} eye="OD" />
+          <ProgressionChart sessions={sessions.items} eye="OS" />
+        </div>
+      )}
 
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Testhistorik</h3>
 

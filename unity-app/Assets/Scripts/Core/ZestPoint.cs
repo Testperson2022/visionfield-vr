@@ -46,13 +46,22 @@ namespace VisionField.Core
                 _dbRange[i] = config.DbMin + i * config.DbStep;
             }
 
-            // Prior distribution: Gaussisk baseret på normative data
+            // Bimodal prior distribution (OPI-inspireret):
+            // Peak 1: Gaussisk ved normativ tærskel (normal syn)
+            // Peak 2: Gaussisk ved 0 dB (absolut scotom)
+            // Ref: OPI ZEST — "one peak centered at 0 dB to model damaged locations"
             _pdf = new double[numSteps];
+            double peakWeight = 0.85; // 85% normal, 15% scotom
             for (int i = 0; i < numSteps; i++)
             {
                 double x = _dbRange[i];
-                double z = (x - gridPoint.NormativeThresholdDb) / gridPoint.NormativeSdDb;
-                _pdf[i] = Math.Exp(-0.5 * z * z);
+                // Normal peak
+                double z1 = (x - gridPoint.NormativeThresholdDb) / gridPoint.NormativeSdDb;
+                double normalPeak = Math.Exp(-0.5 * z1 * z1);
+                // Scotom peak (centreret ved 2 dB, SD=4)
+                double z2 = (x - 2.0) / 4.0;
+                double scotomPeak = Math.Exp(-0.5 * z2 * z2);
+                _pdf[i] = peakWeight * normalPeak + (1.0 - peakWeight) * scotomPeak;
             }
             NormalizePdf();
 
