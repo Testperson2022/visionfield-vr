@@ -42,8 +42,9 @@ export default function PatientsPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {data?.items?.map((p: any) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">
+                  <tr key={p.id} className="hover:bg-blue-50 cursor-pointer"
+                    onClick={() => window.location.href = `/patients/${p.id}`}>
+                    <td className="px-4 py-3 font-medium text-blue-700">
                       {p.firstName} {p.lastName}
                     </td>
                     <td className="px-4 py-3 text-gray-600">{p.birthYear}</td>
@@ -55,7 +56,7 @@ export default function PatientsPage() {
                         to={`/patients/${p.id}`}
                         className="text-blue-600 hover:text-blue-800 text-sm"
                       >
-                        Se tests
+                        Se tests →
                       </Link>
                     </td>
                   </tr>
