@@ -112,30 +112,31 @@ namespace VisionField.Stimuli
 
         /// <summary>
         /// Konvertér visuel vinkel (grader) til pixel-position på skærm.
-        /// Beregner baseret på antaget skærmafstand og fysisk skærmbredde.
+        /// Skalerer 24-2 gitter til at fylde 80% af skærmbredden.
+        /// Max vinkel er 27° → 27° = 40% af skærmbredde fra center.
         /// </summary>
         public Vector2 DegreesToScreenPosition(float xDeg, float yDeg)
         {
-            float pixelsPerDeg = PixelsPerDegree();
-            return new Vector2(xDeg * pixelsPerDeg, yDeg * pixelsPerDeg);
+            float canvasWidth = _testCanvas != null
+                ? ((RectTransform)_testCanvas.transform).rect.width
+                : 1920f;
+            float canvasHeight = _testCanvas != null
+                ? ((RectTransform)_testCanvas.transform).rect.height
+                : 1080f;
+
+            // 27° = 40% af halv skærmbredde
+            float scale = (canvasWidth * 0.4f) / 27f;
+            return new Vector2(xDeg * scale, yDeg * scale);
         }
 
         /// <summary>Konvertér vinkel-diameter til pixels.</summary>
         public float DegreesToPixels(float degrees)
         {
-            return degrees * PixelsPerDegree();
-        }
-
-        private float PixelsPerDegree()
-        {
-            // Fysisk størrelse per grad ved given afstand
-            float cmPerDeg = _screenDistanceCm * Mathf.Tan(Mathf.Deg2Rad);
-            // Pixels per cm
-            float screenWidthPx = _testCanvas != null
+            float canvasWidth = _testCanvas != null
                 ? ((RectTransform)_testCanvas.transform).rect.width
-                : Screen.width;
-            float pxPerCm = screenWidthPx / _screenWidthCm;
-            return cmPerDeg * pxPerCm;
+                : 1920f;
+            float scale = (canvasWidth * 0.4f) / 27f;
+            return degrees * scale;
         }
     }
 }
