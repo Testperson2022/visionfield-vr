@@ -49,65 +49,70 @@ function devToShade(dev: number): string {
   return "#000";
 }
 
-/** SVG-baseret numerisk grid med akser og grad-markering */
-function NumericPlot({ resultMap, field, title, showAxes }: {
+/** SVG-baseret kompakt numerisk grid (Humphrey-stil) */
+function NumericPlot({ resultMap, field, title }: {
   resultMap: Map<number, any>;
   field: "threshold_db" | "total_deviation_db" | "pattern_deviation_db";
   title: string;
-  showAxes?: boolean;
 }) {
-  const w = 360, h = 340;
-  const cx = w / 2, cy = h / 2;
-  const s = 5.8; // pixels per grad
+  // Kompakt grid: 6° spacing = 22px per celle
+  const cellW = 24;
+  const cellH = 18;
+  // Grid spænder x: -27 til 27 (10 kolonner), y: -21 til 21 (8 rækker)
+  // Kolonne index: (x + 27) / 6 = 0..9
+  // Række index: (21 - y) / 6 = 0..7 (men y=-3 og y=3 er tæt)
+  const yValues = [21, 15, 9, 3, -3, -9, -15, -21]; // Bemærk: ingen y=-3 rækker i 24-2
+  const gridW = 10 * cellW + 20;
+  const gridH = 8 * cellH + 20;
+  const ox = 10; // offset x
+  const oy = 10; // offset y
+
+  const colOf = (x: number) => ox + ((x + 27) / 6) * cellW + cellW / 2;
+  const rowOf = (y: number) => {
+    const idx = yValues.indexOf(y);
+    if (idx === -1) return oy;
+    return oy + idx * cellH + cellH / 2;
+  };
+
+  // Horisontal akse mellem y=3 og y=-3 (dvs. mellem idx 3 og 4)
+  const axisY = oy + 3.5 * cellH + cellH / 2;
+  // Vertikal akse mellem x=-3 og x=3 (dvs. kolonne 4.5)
+  const axisX = ox + 4.5 * cellW + cellW / 2;
 
   return (
     <div>
-      <div className="text-xs font-bold text-gray-700 mb-2 text-center">{title}</div>
-      <svg width={w} height={h} className="block mx-auto" style={{ fontFamily: "monospace" }}>
-        {/* Akser */}
-        <line x1={20} y1={cy} x2={w - 20} y2={cy} stroke="#bbb" strokeWidth={0.5} />
-        <line x1={cx} y1={15} x2={cx} y2={h - 15} stroke="#bbb" strokeWidth={0.5} />
+      <div className="text-[10px] font-bold text-gray-700 mb-1 text-center">{title}</div>
+      <svg width={gridW} height={gridH} className="block mx-auto" style={{ fontFamily: "ui-monospace, monospace" }}>
+        {/* Tynd akse */}
+        <line x1={0} y1={axisY} x2={gridW} y2={axisY} stroke="#ccc" strokeWidth={0.5} />
+        <line x1={axisX} y1={0} x2={axisX} y2={gridH} stroke="#ccc" strokeWidth={0.5} />
 
-        {/* Grad-markering på akserne */}
-        {showAxes && [-30, -20, -10, 0, 10, 20, 30].map(d => (
-          <g key={`ax${d}`}>
-            <line x1={cx + d * s} y1={cy - 3} x2={cx + d * s} y2={cy + 3} stroke="#999" strokeWidth={0.5} />
-            <line x1={cx - 3} y1={cy - d * s} x2={cx + 3} y2={cy - d * s} stroke="#999" strokeWidth={0.5} />
-            {d !== 0 && (
-              <>
-                <text x={cx + d * s} y={cy + 14} textAnchor="middle" fontSize={7} fill="#999">{d}</text>
-                <text x={cx - 12} y={cy - d * s + 3} textAnchor="end" fontSize={7} fill="#999">{d}</text>
-              </>
-            )}
-          </g>
-        ))}
-
-        {/* Datapunkter */}
         {POINTS.map(pt => {
+          const px = colOf(pt.x);
+          const py = rowOf(pt.y);
           const r = resultMap.get(pt.id);
-          const px = cx + pt.x * s;
-          const py = cy - pt.y * s;
 
           if (pt.bs) {
-            return <text key={pt.id} x={px} y={py + 3} textAnchor="middle" fontSize={8} fill="#999">·</text>;
+            return <text key={pt.id} x={px} y={py + 4} textAnchor="middle" fontSize={9} fill="#aaa">·</text>;
           }
 
           let val: number;
           let displayText: string;
-          let color = "#000";
+          let color = "#222";
 
           if (field === "threshold_db") {
             val = r ? r.threshold_db : 0;
             displayText = val < 0 ? "<0" : Math.round(val).toString();
           } else {
             val = r ? (field === "pattern_deviation_db" ? (r.pattern_deviation_db ?? r.total_deviation_db) : r.total_deviation_db) : 0;
-            displayText = val >= 0 ? `+${Math.round(val)}` : Math.round(val).toString();
-            if (val < -5) color = "#c00";
+            displayText = val >= 0 ? Math.round(val).toString() : Math.round(val).toString();
+            if (val < -5) color = "#b00";
+            if (val >= 0) color = "#555";
           }
 
           return (
-            <text key={pt.id} x={px} y={py + 3} textAnchor="middle"
-              fontSize={9} fill={color} fontWeight={val < -10 ? "bold" : "normal"}>
+            <text key={pt.id} x={px} y={py + 4} textAnchor="middle"
+              fontSize={9} fill={color}>
               {displayText}
             </text>
           );
@@ -117,48 +122,47 @@ function NumericPlot({ resultMap, field, title, showAxes }: {
   );
 }
 
-/** SVG probability symbol map */
-function ProbabilityPlot({ resultMap, field, title }: {
+/** Kompakt probability symbol map */
+function ProbabilityPlot({ resultMap, field }: {
   resultMap: Map<number, any>;
   field: "total_deviation_db" | "pattern_deviation_db";
-  title: string;
 }) {
-  const w = 360, h = 300;
-  const cx = w / 2, cy = h / 2;
-  const s = 5.8;
-  const cs = 14; // celle størrelse
+  const cellW = 24;
+  const cellH = 18;
+  const cs = 14;
+  const yValues = [21, 15, 9, 3, -3, -9, -15, -21];
+  const gridW = 10 * cellW + 20;
+  const gridH = 8 * cellH + 20;
+  const ox = 10, oy = 10;
+
+  const colOf = (x: number) => ox + ((x + 27) / 6) * cellW + cellW / 2;
+  const rowOf = (y: number) => {
+    const idx = yValues.indexOf(y);
+    return oy + idx * cellH + cellH / 2;
+  };
 
   return (
     <div>
-      <div className="text-xs font-bold text-gray-700 mb-2 text-center">{title} — Probability</div>
-      <svg width={w} height={h} className="block mx-auto">
-        {/* Akser */}
-        <line x1={20} y1={cy} x2={w - 20} y2={cy} stroke="#ddd" strokeWidth={0.5} />
-        <line x1={cx} y1={15} x2={cx} y2={h - 15} stroke="#ddd" strokeWidth={0.5} />
-
+      <svg width={gridW} height={gridH} className="block mx-auto">
         {POINTS.map(pt => {
           if (pt.bs) return null;
           const r = resultMap.get(pt.id);
           const dev = r ? (field === "pattern_deviation_db" ? (r.pattern_deviation_db ?? r.total_deviation_db) : r.total_deviation_db) : 0;
           const shade = devToShade(dev);
-          const px = cx + pt.x * s;
-          const py = cy - pt.y * s;
-
           if (shade === "transparent") return null;
+          const px = colOf(pt.x);
+          const py = rowOf(pt.y);
           return (
-            <rect key={pt.id}
-              x={px - cs / 2} y={py - cs / 2}
-              width={cs} height={cs}
-              fill={shade} rx={1}
-            />
+            <rect key={pt.id} x={px - cs / 2} y={py - cs / 2}
+              width={cs} height={cs} fill={shade} />
           );
         })}
       </svg>
-      <div className="flex gap-3 text-[9px] text-gray-500 justify-center mt-1">
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 inline-block" style={{ background: "#ccc" }} /> &lt;5%</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 inline-block" style={{ background: "#888" }} /> &lt;2%</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 inline-block" style={{ background: "#444" }} /> &lt;1%</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 inline-block" style={{ background: "#000" }} /> &lt;0.5%</span>
+      <div className="flex gap-2 text-[8px] text-gray-500 justify-center">
+        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#ccc" }} /> &lt;5%</span>
+        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#888" }} /> &lt;2%</span>
+        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#444" }} /> &lt;1%</span>
+        <span className="flex items-center gap-0.5"><span className="w-2 h-2 inline-block" style={{ background: "#000" }} /> &lt;0.5%</span>
       </div>
     </div>
   );
@@ -226,20 +230,20 @@ export default function VisualFieldMap({ pointResults, eye }: VisualFieldMapProp
       </h3>
 
       {/* Øverste række: Numerisk + Grayscale */}
-      <div className="flex justify-center gap-8 mb-8 flex-wrap">
-        <NumericPlot resultMap={resultMap} field="threshold_db" title="Numeric Results (dB)" showAxes />
+      <div className="flex justify-center gap-6 mb-6 flex-wrap">
+        <NumericPlot resultMap={resultMap} field="threshold_db" title="Numeric Results (dB)" />
         <GrayscalePlot resultMap={resultMap} />
       </div>
 
       {/* Nederste række: Total Deviation + Pattern Deviation */}
-      <div className="flex justify-center gap-8 flex-wrap">
+      <div className="flex justify-center gap-6 flex-wrap">
         <div>
           <NumericPlot resultMap={resultMap} field="total_deviation_db" title="Total Deviation" />
-          <ProbabilityPlot resultMap={resultMap} field="total_deviation_db" title="Total Deviation" />
+          <ProbabilityPlot resultMap={resultMap} field="total_deviation_db" />
         </div>
         <div>
           <NumericPlot resultMap={resultMap} field="pattern_deviation_db" title="Pattern Deviation" />
-          <ProbabilityPlot resultMap={resultMap} field="pattern_deviation_db" title="Pattern Deviation" />
+          <ProbabilityPlot resultMap={resultMap} field="pattern_deviation_db" />
         </div>
       </div>
     </div>
