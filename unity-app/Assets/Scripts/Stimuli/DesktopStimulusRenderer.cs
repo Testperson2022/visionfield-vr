@@ -79,7 +79,9 @@ namespace VisionField.Stimuli
             if (_stimulusRect != null)
             {
                 _stimulusRect.anchoredPosition = position;
-                _stimulusRect.sizeDelta = new Vector2(sizePx, sizePx);
+                // Minimum 20px for synlighed på skærm
+                float displaySize = Mathf.Max(sizePx, 20f);
+                _stimulusRect.sizeDelta = new Vector2(displaySize, displaySize);
                 _stimulusRect.gameObject.SetActive(true);
             }
 

@@ -137,7 +137,9 @@ namespace VisionField.UI
 
         private IEnumerator TestLoop()
         {
-            while (_testRunning && !_testRunner.IsComplete)
+            float maxTestDuration = 300f; // Max 5 minutter per øje
+            while (_testRunning && !_testRunner.IsComplete &&
+                   Time.realtimeSinceStartup - _testStartTime < maxTestDuration)
             {
                 _currentStimulus = _testRunner.GetNextStimulus();
                 if (_currentStimulus == null) break;
@@ -173,8 +175,8 @@ namespace VisionField.UI
                 }
             }
 
-            if (_testRunner.IsComplete)
-                ShowResults();
+            // Test færdig (konvergeret eller timeout)
+            ShowResults();
         }
 
         private void RecordResponse(bool responded, float responseTimeMs)
