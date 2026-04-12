@@ -65,10 +65,13 @@ namespace VisionField.Core
 
         // ─── Catch trials og kvalitetskontrol ────────────────────────────
 
-        /// <summary>False positive rate grænse — over dette er testen ugyldig</summary>
-        public const float MAX_FALSE_POSITIVE_RATE = 0.20f;
+        /// <summary>
+        /// False positive rate grænse — over dette markeres "low patient reliability".
+        /// Ref: Walsh 2010, p.126 — "if false-positive or false-negative errors reach 33%"
+        /// </summary>
+        public const float MAX_FALSE_POSITIVE_RATE = 0.33f;
 
-        /// <summary>False negative rate grænse — over dette er testen ugyldig</summary>
+        /// <summary>False negative rate grænse — over dette er testen upålidelig</summary>
         public const float MAX_FALSE_NEGATIVE_RATE = 0.33f;
 
         /// <summary>Fixation loss rate grænse</summary>

@@ -175,12 +175,21 @@ namespace VisionField.Core
             float md = mdSum / pointResults.Count;
 
             // Pattern Deviation: korrigér for generelt tab
-            // PD = TD - MD (7th percentile correction i fuld implementation)
+            // Bruger 7. percentil korrektion (85. percentil af TD-værdier)
+            // Ref: Walsh 2010, p.126 — "the seventh-most sensitive total deviation value"
+            var tdValues = new List<float>();
+            for (int i = 0; i < pointResults.Count; i++)
+                tdValues.Add(pointResults[i].TotalDeviationDb);
+            tdValues.Sort();
+            tdValues.Reverse(); // Mest positive (bedste) først
+            int seventhIdx = Math.Min(6, tdValues.Count - 1); // 7. bedste (0-indexed)
+            float pdCorrection = seventhIdx >= 0 ? tdValues[seventhIdx] : md;
+
             var correctedResults = new PointResult[pointResults.Count];
             for (int i = 0; i < pointResults.Count; i++)
             {
                 correctedResults[i] = pointResults[i];
-                correctedResults[i].PatternDeviationDb = pointResults[i].TotalDeviationDb - md;
+                correctedResults[i].PatternDeviationDb = pointResults[i].TotalDeviationDb - pdCorrection;
             }
 
             // Pattern Standard Deviation (PSD)
@@ -199,7 +208,7 @@ namespace VisionField.Core
                 MeanDeviationPValue = 0f, // Kræver normativ p-value tabel — implementeres separat
                 PatternSdDb = psd,
                 PatternSdPValue = 0f,
-                GHT = GHTResult.WithinNormalLimits, // Kræver hemifield-sammenligning — implementeres separat
+                GHT = GlaucomaHemifieldTest.Evaluate(correctedResults),
                 TriageClassification = triage.Classification,
                 TriageRecommendation = triage.Recommendation
             };

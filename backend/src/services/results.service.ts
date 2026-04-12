@@ -12,7 +12,7 @@ const TRIAGE = {
   ABNORMAL_MD: -6,
   NORMAL_PSD: 2.0,
   ABNORMAL_PSD: 3.0,
-  MAX_FP_RATE: 0.20,
+  MAX_FP_RATE: 0.33, // Ref: Walsh 2010, p.126 — both FP and FN threshold is 33%
   MAX_FN_RATE: 0.33,
   MAX_FIXATION_LOSS: 0.20,
 } as const;
