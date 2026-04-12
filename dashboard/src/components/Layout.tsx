@@ -10,6 +10,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { path: "/patients", label: t("nav.patients") },
+    { path: "/monitor", label: "Live Monitor" },
     { path: "/devices", label: t("nav.devices") },
     ...(user?.role === "ADMIN" ? [{ path: "/audit-logs", label: t("nav.auditLog") }] : []),
   ];

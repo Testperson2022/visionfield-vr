@@ -8,6 +8,7 @@ import TestResultsPage from "./pages/TestResultsPage";
 import DevicesPage from "./pages/DevicesPage";
 import AuditLogPage from "./pages/AuditLogPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import OperatorMonitorPage from "./pages/OperatorMonitorPage";
 
 export default function App() {
   const token = useAuthStore((s) => s.token);
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/patients/:id" element={<PatientDetailPage />} />
         <Route path="/test-results/:sessionId" element={<TestResultsPage />} />
         <Route path="/devices" element={<DevicesPage />} />
+        <Route path="/monitor" element={<OperatorMonitorPage />} />
         {user?.role === "ADMIN" && (
           <Route path="/audit-logs" element={<AuditLogPage />} />
         )}
