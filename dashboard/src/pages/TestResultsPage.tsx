@@ -109,17 +109,37 @@ export default function TestResultsPage() {
               }`}>Begge</button>
           </div>
 
-          <button onClick={async () => {
-              const sid = activeSession?.id ?? sessionId;
-              const { data } = await api.get(`/api/reports/${sid}/pdf`, { responseType: "blob" });
-              const url = window.URL.createObjectURL(new Blob([data]));
-              const a = document.createElement("a"); a.href = url;
-              a.download = `screening-${sid}.pdf`; a.click();
-              window.URL.revokeObjectURL(url);
-            }}
-            className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gray-800">
-            PDF
-          </button>
+          {/* Handlingsknapper */}
+          <div className="flex gap-2">
+            <button onClick={async () => {
+                const sid = activeSession?.id ?? sessionId;
+                const { data } = await api.get(`/api/reports/${sid}/pdf`, { responseType: "blob" });
+                const url = window.URL.createObjectURL(new Blob([data]));
+                const a = document.createElement("a"); a.href = url;
+                a.download = `screening-${sid}.pdf`; a.click();
+                window.URL.revokeObjectURL(url);
+              }}
+              className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gray-800">
+              PDF
+            </button>
+            <button onClick={() => {
+                const sid = activeSession?.id ?? sessionId;
+                api.get(`/api/export/${sid}/json`).then(({ data }) => {
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement("a"); a.href = url;
+                  a.download = `screening-${sid}.json`; a.click();
+                  window.URL.revokeObjectURL(url);
+                });
+              }}
+              className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50">
+              JSON
+            </button>
+            <button onClick={() => window.print()}
+              className="bg-white border text-gray-700 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50">
+              Print
+            </button>
+          </div>
         </div>
       </div>
 

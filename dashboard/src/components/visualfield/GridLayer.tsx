@@ -24,8 +24,14 @@ export function createGridConfig(width: number = 380, height: number = 340): Gri
   };
 }
 
-export function toSvgX(xDeg: number, g: GridConfig): number {
-  return g.centerX + xDeg * g.scale;
+/**
+ * Konvertér grader til SVG x-position.
+ * mirror=true for OS (venstre øje) — spejler x-aksen.
+ * Ref: Humphrey VFA viser OD og OS spejlet.
+ */
+export function toSvgX(xDeg: number, g: GridConfig, mirror: boolean = false): number {
+  const x = mirror ? -xDeg : xDeg;
+  return g.centerX + x * g.scale;
 }
 
 export function toSvgY(yDeg: number, g: GridConfig): number {

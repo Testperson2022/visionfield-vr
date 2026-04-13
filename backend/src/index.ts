@@ -23,6 +23,7 @@ import deviceRoutes from "./routes/devices";
 import reportRoutes from "./routes/reports";
 import auditLogRoutes from "./routes/audit-logs";
 import exportRoutes from "./routes/export";
+import screeningRoutes from "./routes/screening";
 
 import { setupWebSocket } from "./websocket/handler";
 import { logger } from "./utils/logger";
@@ -71,6 +72,7 @@ app.use("/api/devices", deviceRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/audit-logs", auditLogRoutes);
 app.use("/api/export", exportRoutes);
+app.use("/api/screening", screeningRoutes);
 
 // ─── Error handler (skal være SIDST) ────────────────────────────────
 app.use(errorHandler);

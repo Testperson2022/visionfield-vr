@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Print-venlig visning */
+@media print {
+  /* Skjul sidebar og navigation */
+  aside, nav, button, .no-print { display: none !important; }
+  /* Fuld bredde for indhold */
+  main { margin: 0 !important; padding: 10mm !important; width: 100% !important; }
+  /* Bevar farver i print */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  /* Sideskift */
+  .page-break { page-break-before: always; }
+  /* SVG skalering */
+  svg { max-width: 100% !important; }
+}
