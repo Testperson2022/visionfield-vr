@@ -5,7 +5,7 @@
  * normal = intet, p<5% = lys grå, p<2% = grå, p<1% = mørk, p<0.5% = sort
  */
 import { GridConfig, toSvgX, toSvgY } from "./GridLayer";
-import type { ProbabilityClass } from "../../../../shared/screening/types";
+import type { ProbabilityClass } from "../../screening/types";
 
 interface Point {
   gridPointId: number;

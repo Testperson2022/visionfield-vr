@@ -5,7 +5,7 @@
  * Farve indikerer alvorlighed.
  */
 import { GridConfig, toSvgX, toSvgY } from "./GridLayer";
-import type { Cluster } from "../../../../shared/screening/types";
+import type { Cluster } from "../../screening/types";
 
 interface Point {
   gridPointId: number;

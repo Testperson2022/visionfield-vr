@@ -19,7 +19,7 @@ import ThresholdLayer from "./ThresholdLayer";
 import DeviationLayer from "./DeviationLayer";
 import ProbabilityLayer, { ProbabilityLegend } from "./ProbabilityLayer";
 import ClusterOverlay from "./ClusterOverlay";
-import type { ScreeningResult, AnalyzedPoint, Cluster } from "../../../../shared/screening/types";
+import type { ScreeningResult, AnalyzedPoint, Cluster } from "../../screening/types";
 
 type ViewMode = "threshold" | "td_deviation" | "pd_deviation" | "td_probability" | "pd_probability";
 

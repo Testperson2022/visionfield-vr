@@ -9,7 +9,7 @@
  * - Anbefalet handling
  * - Disclaimer
  */
-import type { ScreeningResult } from "../../../../shared/screening/types";
+import type { ScreeningResult } from "../../screening/types";
 
 interface Props {
   result: ScreeningResult;

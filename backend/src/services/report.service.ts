@@ -129,12 +129,29 @@ export function generateReportPdf(data: ReportData): PDFKit.PDFDocument {
   doc.text(`Pålidelig: ${data.isReliable ? "Ja" : "NEJ — anbefal gentest"}`);
   doc.moveDown(1);
 
-  // ─── Footer ──────────────────────────────────────────────────
-  doc.fontSize(8).font("Helvetica").fillColor("#888888");
+  // ─── Screening-opsummering ────────────────────────────────────
+  doc.fontSize(12).font("Helvetica-Bold").fillColor("#000000").text("Screening-vurdering");
+  doc.fontSize(10).font("Helvetica");
+  doc.text(data.triageRecommendation);
+  doc.moveDown(0.5);
+
+  // Disclaimer
+  doc.fontSize(8).font("Helvetica-Oblique").fillColor("#666666");
   doc.text(
-    "Genereret af VisionField VR v1.0.0. Klasse IIa medicinsk software (MDR 2017/745). " +
-    "Resultater skal vurderes af autoriseret kliniker.",
-    50, doc.page.height - 60,
+    "SCREENING — IKKE DIAGNOSTISK SOFTWARE. " +
+    "Dette resultat er et screenings- og beslutningsstoettevaerktoej. " +
+    "Resultatet erstatter ikke en fuld klinisk undersoegelse og skal altid " +
+    "vurderes af en kvalificeret fagperson."
+  );
+  doc.moveDown(1);
+
+  // ─── Footer ──────────────────────────────────────────────────
+  doc.fontSize(7).font("Helvetica").fillColor("#999999");
+  doc.text(
+    "Genereret af VisionField VR v1.0.0. " +
+    "Screening- og beslutningsstoettevaerktoej. " +
+    "Ikke certificeret diagnostisk medicinsk software.",
+    50, doc.page.height - 50,
     { width: doc.page.width - 100, align: "center" }
   );
 
